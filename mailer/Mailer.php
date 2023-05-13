@@ -1,16 +1,15 @@
 <?php
 
 /**
- * Maatify Mailer.
- * PHP Version >= 8.0
- *
- * @see https://github.com/Maatify/Mailer The Maatify Mailer GitHub project
- * 
+ * @PHP Version >= 8.0
+ * @Project   Mailer
+ * @see https://www.maatify.dev Visit Maatify.dev
+ * @link https://github.com/Maatify/Mailer View project on GitHub
  * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer),
  * @link https://github.com/symfony/mailer/ (symfony/mailer),
  *
  * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
- * @copyright 2023 Mohamed Abdulalim
+ * @copyright ©2023 Maatify.dev
  * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
  *
  * This program is distributed in the hope that it will be useful - WITHOUT
@@ -29,6 +28,9 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\Loader\FilesystemLoader;
 
+/**
+*@author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
+ */
 class Mailer extends MailerSender
 {
     private Environment $twig;

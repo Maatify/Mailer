@@ -1,16 +1,15 @@
 <?php
 
 /**
- * Maatify Mailer.
- * PHP Version >= 8.0
- *
- * @see https://github.com/Maatify/Mailer The Maatify Mailer GitHub project
- *
+ * @PHP Version >= 8.0
+ * @Project   Mailer
+ * @see https://www.maatify.dev Visit Maatify.dev
+ * @link https://github.com/Maatify/Mailer View project on GitHub
  * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer),
  * @link https://github.com/symfony/mailer/ (symfony/mailer),
  *
  * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
- * @copyright 2023 Mohamed Abdulalim
+ * @copyright ©2023 Maatify.dev
  * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
  *
  * This program is distributed in the hope that it will be useful - WITHOUT
@@ -26,6 +25,9 @@ use App\Assist\Mailer\StgMail;
 use Maatify\Logger\Logger;
 use PHPMailer\PHPMailer\PHPMailer;
 
+/**
+ *@author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
+ */
 abstract class MailerSender
 {
     protected string $text;
@@ -108,46 +110,49 @@ abstract class MailerSender
     private function CurlJsonPost(): void
     {
         $url = StgMail::stg_mailer_url;
-        $params = [
-            'name'=>$this->receiver_name,
-            'email'=>$this->receiver_email,
-            'subject'=>$this->subject,
-            'message' =>$this->html
-        ];
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 0);
-        if(!empty($params)) {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
-        }
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json'
-        ));
-        $result = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curl_errno = curl_errno($ch);
-        $curl_error = curl_error($ch);
-        curl_close($ch);
-        if ($curl_errno > 0) {
-            $response['value'] = 400;
-            $response['error'] = "(err-" . __METHOD__ . ") cURL Error ($curl_errno): $curl_error";
-        } else {
-            if ($resultArray = json_decode($result, true)) {
-                $response = $resultArray;
-            } else {
-                $response['value'] = 400;
-                $response['error'] = ($httpCode != 200) ? "Error header response " . $httpCode : "There is no response from server (err-" . __METHOD__ . ")";
-                $response['result'] = $result;
+        if(!empty($url)) {
+            $url = StgMail::stg_mailer_url;
+            $params = [
+                'name'    => $this->receiver_name,
+                'email'   => $this->receiver_email,
+                'subject' => $this->subject,
+                'message' => $this->html,
+            ];
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, 0);
+            if (! empty($params)) {
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
             }
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+            ));
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curl_errno = curl_errno($ch);
+            $curl_error = curl_error($ch);
+            curl_close($ch);
+            if ($curl_errno > 0) {
+                $response['value'] = 400;
+                $response['error'] = "(err-" . __METHOD__ . ") cURL Error ($curl_errno): $curl_error";
+            } else {
+                if ($resultArray = json_decode($result, true)) {
+                    $response = $resultArray;
+                } else {
+                    $response['value'] = 400;
+                    $response['error'] = ($httpCode != 200) ? "Error header response " . $httpCode : "There is no response from server (err-" . __METHOD__ . ")";
+                    $response['result'] = $result;
+                }
+            }
+            Logger::RecordLog([$response, $url, $params], __CLASS__);
         }
-        Logger::RecordLog([$response, $url, $params], __CLASS__);
     }
 }
