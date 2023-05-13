@@ -1,7 +1,7 @@
 {
   "name": "maatify/mailer",
   "description": "Official PHP library for maatify.dev Mailer handler, known by our team",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "library",
   "keywords": [
     "PHP",
@@ -47,7 +47,8 @@
     "symfony/twig-bundle": "^5.4",
     "symfony/mailer": "^5.4",
     "phpmailer/phpmailer": "^6.8",
-    "maatify/logger": "^1.0"
+    "maatify/logger": "^1.0",
+    "ext-curl": "*"
   },
   "autoload": {
     "psr-4": {

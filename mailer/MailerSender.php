@@ -3,7 +3,7 @@
 namespace Maatify\Mailer;
 
 use Exception;
-use Maatify\app\Assist\Mailer\StgMail;
+use App\Assist\Mailer\StgMail;
 use Maatify\Logger\Logger;
 use PHPMailer\PHPMailer\PHPMailer;
 
