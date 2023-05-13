@@ -1,5 +1,24 @@
 <?php
 
+/**
+ * Maatify Mailer.
+ * PHP Version >= 8.0
+ *
+ * @see https://github.com/Maatify/Mailer The Maatify Mailer GitHub project
+ *
+ * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer),
+ * @link https://github.com/symfony/mailer/ (symfony/mailer),
+ *
+ * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
+ * @copyright 2023 Mohamed Abdulalim
+ * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
+ *
+ * This program is distributed in the hope that it will be useful - WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
+
 namespace Maatify\Mailer;
 
 use Exception;
