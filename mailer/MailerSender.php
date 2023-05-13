@@ -18,7 +18,8 @@ abstract class MailerSender
     protected function SendEmail(): bool
     {
         if(!str_contains($_SERVER['HTTP_HOST'], '84206.net')) {
-            iconv_set_encoding("internal_encoding", "UTF-8");
+//            iconv_set_encoding("internal_encoding", "UTF-8");
+            ini_set('default_charset', 'UTF-8');
             $mail = new PHPMailer();
             try {
                 //Server settings
