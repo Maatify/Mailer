@@ -5,7 +5,7 @@ Official PHP library for maatify.dev Mailer handler, known by our team
 
     composer require maatify/logger
     
-Don't forget to create Class
+Don't forget to create Class App\Assist\Maile
 
     namespace App\Assist\Mailer;
 
