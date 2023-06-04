@@ -3,7 +3,7 @@ Official PHP library for maatify.dev Mailer handler, known by our team
 
 ## Installation
 
-    composer require maatify/logger
+    composer require maatify/mailer
     
 Don't forget to create Class App\Assist\Maile
 
