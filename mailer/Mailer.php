@@ -132,7 +132,7 @@ class Mailer extends MailerSender
 
     public function ConfirmDashboardLink(string $code): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail.php?token=' . $code);
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail/' . $code);
     }
 
     private function ConfirmLink(string $url): bool
