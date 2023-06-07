@@ -92,7 +92,18 @@ class Mailer extends MailerSender
 
         $this->twig_name = 'message_admin';
 
-        return $this->Sender();
+        if($this->Sender()){
+            $this->data = ['message' => 'We have received your message, we will reply ASAP.' . PHP_EOL . PHP_EOL . $message];
+            $this->subject = 'RE: ' . $subject;
+            $this->reply_name = $_ENV['SMTP_FROM_MAIL'];
+            $this->reply_email = $_ENV['SMTP_FROM_NAME'];
+            $this->receiver_email = $this->receiver_name;
+            $this->receiver_name = $this->receiver_email;
+            $this->twig_name = 'message';
+            return $this->Sender();
+        }else{
+            return false;
+        }
     }
 
     public function Message(string $message, string $subject): bool
