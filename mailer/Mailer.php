@@ -117,15 +117,12 @@ class Mailer extends MailerSender
         return $this->Sender();
     }
 
-    public function ConfirmUserLink(string $code, string $url = ''): bool
+    public function ConfirmUserLink(string $code): bool
     {
-        if(empty($url)){
-            $url = $_ENV['SITE_URL'] . '/portal';
-        }
-        return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/portal/confirm_mail.php?token=' . $code);
     }
 
-    public function ConfirmCustomerLink(string $code, string $url = ''): bool
+    public function ConfirmCustomerLink(string $code, string $subject = '', string $url = ''): bool
     {
         if(empty($url)){
             $url = $_ENV['SITE_URL'];
@@ -133,12 +130,9 @@ class Mailer extends MailerSender
         return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
     }
 
-    public function ConfirmDashboardLink(string $code, string $url = ''): bool
+    public function ConfirmDashboardLink(string $code): bool
     {
-        if(empty($url)){
-            $url = $_ENV['SITE_URL'] . '/dashboard';
-        }
-        return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail.php?token=' . $code);
     }
 
     private function ConfirmLink(string $url): bool
