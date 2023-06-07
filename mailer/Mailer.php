@@ -35,7 +35,7 @@ class Mailer extends MailerSender
 {
     private Environment $twig;
 
-    protected static self $instance;
+    private static self $instance;
 
     public static function obj(string $email = '', string $name = ''): self
     {
@@ -75,6 +75,17 @@ class Mailer extends MailerSender
         $this->subject = 'Confirm Code';
 
         $this->twig_name = 'confirm';
+
+        return $this->Sender();
+    }
+
+    public function AdminMessage(string $message, string $subject): bool
+    {
+        $this->data = ['message' => $message];
+
+        $this->subject = $subject;
+
+        $this->twig_name = 'message_admin';
 
         return $this->Sender();
     }
