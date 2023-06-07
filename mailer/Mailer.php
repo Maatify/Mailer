@@ -92,16 +92,35 @@ class Mailer extends MailerSender
         return $this->Sender();
     }
 
+    public function ConfirmUserLink(string $code): bool
+    {
+        $this->twig_name = 'confirm_user_link';
+
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/portal/confirm_mail.php?token=' . $code);
+    }
+
     public function ConfirmCustomerLink(string $code): bool
     {
 
-        $this->data = ['code' => $_ENV['SITE_URL'] . '/confirm_mail.php?token=' . $code,
+        $this->twig_name = 'confirm_customer_link';
+
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/confirm_mail.php?token=' . $code);
+    }
+
+    public function ConfirmDashboardLink(string $code): bool
+    {
+        $this->twig_name = 'confirm_dashboard_link';
+
+        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail.php?token=' . $code);
+    }
+
+    private function ConfirmLink(string $url): bool
+    {
+        $this->data = ['code' => $url,
                        'email' => $this->receiver_email,
                        'time' => date("Y-m-d H:i:s", time())];
 
         $this->subject = 'Confirm Mail';
-
-        $this->twig_name = 'confirm_customer_link';
 
         return $this->Sender();
     }
@@ -122,19 +141,13 @@ class Mailer extends MailerSender
     private function Sender(): bool
     {
         try {
-            $this->html = $this->twig->render('__header.html.twig',
-                $this->data
-            );
-            $this->html .= $this->twig->render($this->twig_name . '.html.twig',
-                $this->data
-            );
-            $this->html .= $this->twig->render('__footer.html.twig',
-                $this->data
-            );
+            $this->html = $this->twig->render('__header.html.twig', $this->data);
 
-            $this->text = $this->twig->render($this->twig_name . '.text.twig',
-                $this->data
-            );
+            $this->html .= $this->twig->render($this->twig_name . '.html.twig', $this->data);
+
+            $this->html .= $this->twig->render('__footer.html.twig', $this->data);
+
+            $this->text = $this->twig->render($this->twig_name . '.text.twig', $this->data);
 
             return $this->SendEmail();
 
