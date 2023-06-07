@@ -94,28 +94,22 @@ class Mailer extends MailerSender
 
     public function ConfirmUserLink(string $code): bool
     {
-        $this->twig_name = 'confirm_user_link';
-
         return $this->ConfirmLink($_ENV['SITE_URL'] . '/portal/confirm_mail.php?token=' . $code);
     }
 
     public function ConfirmCustomerLink(string $code): bool
     {
-
-        $this->twig_name = 'confirm_customer_link';
-
         return $this->ConfirmLink($_ENV['SITE_URL'] . '/confirm_mail.php?token=' . $code);
     }
 
     public function ConfirmDashboardLink(string $code): bool
     {
-        $this->twig_name = 'confirm_dashboard_link';
-
         return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail.php?token=' . $code);
     }
 
     private function ConfirmLink(string $url): bool
     {
+        $this->twig_name = 'confirm_link';
         $this->data = ['code' => $url,
                        'email' => $this->receiver_email,
                        'time' => date("Y-m-d H:i:s", time())];
