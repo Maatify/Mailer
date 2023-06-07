@@ -35,6 +35,8 @@ abstract class MailerSender
 
     protected string $receiver_name;
     protected string $receiver_email;
+    protected string $reply_email;
+    protected string $reply_name;
     protected string $subject;
     protected function SendEmail(): bool
     {
@@ -67,6 +69,11 @@ abstract class MailerSender
                     (! empty($this->receiver_name) ? $this->receiver_name
                         : $this->receiver_email));                                        //Add a recipient
                 //            $mail->addAddress('ellen@example.com');               //Name is optional
+                if(!empty($this->reply_email)){
+                    $mail->addReplyTo($this->reply_email,
+                        (! empty($this->reply_name) ? $this->reply_name
+                            : $this->reply_email));
+                }
                 //            $mail->addReplyTo('info@example.com', 'Information');
                 //            $mail->addCC('cc@example.com');
                 //            $mail->addBCC('bcc@example.com');

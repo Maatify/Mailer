@@ -85,6 +85,11 @@ class Mailer extends MailerSender
 
         $this->subject = $subject;
 
+        $this->reply_name = $this->receiver_name;
+        $this->reply_email = $this->receiver_email;
+        $this->receiver_email = $_ENV['SMTP_FROM_MAIL'];
+        $this->receiver_name = $_ENV['SMTP_FROM_NAME'];
+
         $this->twig_name = 'message_admin';
 
         return $this->Sender();
