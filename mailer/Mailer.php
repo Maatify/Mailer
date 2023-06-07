@@ -66,10 +66,7 @@ class Mailer extends MailerSender
 
     public function ConfirmCode(string $code): bool
     {
-        $this->data = ['name' => $this->receiver_name,
-                       'code' => $code,
-                       'email' => $this->receiver_email,
-                       'time' => date("Y-m-d H:i:s", time())];
+        $this->data = ['code' => $code];
 
         $this->subject = 'Confirm Code';
 
@@ -80,10 +77,7 @@ class Mailer extends MailerSender
 
     public function Message(string $message, string $subject): bool
     {
-        $this->data = ['name' => $this->receiver_name,
-                       'message' => $message,
-                       'email' => $this->receiver_email,
-                       'time' => date("Y-m-d H:i:s", time())];
+        $this->data = ['message' => $message];
 
         $this->subject = $subject;
 
@@ -110,9 +104,7 @@ class Mailer extends MailerSender
     private function ConfirmLink(string $url): bool
     {
         $this->twig_name = 'confirm_link';
-        $this->data = ['code' => $url,
-                       'email' => $this->receiver_email,
-                       'time' => date("Y-m-d H:i:s", time())];
+        $this->data = ['code' => $url];
 
         $this->subject = 'Confirm Mail';
 
@@ -121,10 +113,7 @@ class Mailer extends MailerSender
 
     public function TempPassword(string $password): bool
     {
-        $this->data = ['name' => $this->receiver_name,
-                       'code' => $password,
-                       'email' => $this->receiver_email,
-                       'time' => date("Y-m-d H:i:s", time())];
+        $this->data = ['code' => $password];
 
         $this->subject = 'Your Temporary Password';
         $this->twig_name = 'temp_pass';
@@ -135,6 +124,9 @@ class Mailer extends MailerSender
     private function Sender(): bool
     {
         try {
+            $this->data['name'] = $this->receiver_name;
+            $this->data['email'] = $this->receiver_email;
+            $this->data['time'] = date("Y-m-d H:i:s", time());
             $this->html = $this->twig->render('__header.html.twig', $this->data);
 
             $this->html .= $this->twig->render($this->twig_name . '.html.twig', $this->data);
