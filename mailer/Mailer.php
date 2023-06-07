@@ -37,8 +37,9 @@ class Mailer extends MailerSender
 
     protected static self $instance;
 
-    public static function obj(string $email, string $name = ''): self
+    public static function obj(string $email = '', string $name = ''): self
     {
+
         if(empty(self::$instance))
         {
             self::$instance = new self($email, $name);
@@ -46,8 +47,11 @@ class Mailer extends MailerSender
         return self::$instance;
     }
 
-    public function __construct(string $email, string $name = '')
+    public function __construct(string $email = '', string $name = '')
     {
+        if(empty($email)){
+            $email = $_ENV['SMTP_REPLY_MAIL'];
+        }
         $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email');
 
         $this->twig = new Environment($loader);
@@ -86,19 +90,28 @@ class Mailer extends MailerSender
         return $this->Sender();
     }
 
-    public function ConfirmUserLink(string $code): bool
+    public function ConfirmUserLink(string $code, string $url = ''): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/portal/confirm_mail.php?token=' . $code);
+        if(empty($url)){
+            $url = $_ENV['SITE_URL'] . '/portal';
+        }
+        return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
     }
 
-    public function ConfirmCustomerLink(string $code): bool
+    public function ConfirmCustomerLink(string $code, string $url = ''): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/confirm_mail.php?token=' . $code);
+        if(empty($url)){
+            $url = $_ENV['SITE_URL'];
+        }
+        return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
     }
 
-    public function ConfirmDashboardLink(string $code): bool
+    public function ConfirmDashboardLink(string $code, string $url = ''): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm_mail.php?token=' . $code);
+        if(empty($url)){
+            $url = $_ENV['SITE_URL'] . '/dashboard';
+        }
+        return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
     }
 
     private function ConfirmLink(string $url): bool
@@ -108,6 +121,16 @@ class Mailer extends MailerSender
 
         $this->subject = 'Confirm Mail';
 
+        return $this->Sender();
+    }
+
+    public function ResetPassDashboardLink(string $code): bool
+    {
+        $this->twig_name = 'forget_password';
+        $this->data = ['code' => $_ENV['SITE_URL'] . '/dashboard/forget-password/' . $code,
+                       'image' => $_ENV['SITE_URL'] . '/images/letter.png'];
+
+        $this->subject = 'Reset Password';
         return $this->Sender();
     }
 

@@ -1,7 +1,7 @@
 {
   "name": "maatify/mailer",
   "description": "Official PHP library for maatify.dev Mailer handler, known by our team",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "type": "library",
   "keywords": [
     "PHP",
