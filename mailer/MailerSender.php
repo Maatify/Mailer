@@ -40,7 +40,7 @@ abstract class MailerSender
     protected string $subject;
     protected function SendEmail(): bool
     {
-        if(!str_contains($_SERVER['HTTP_HOST'], '84206.net')) {
+        if(!str_contains($_SERVER['HTTP_HOST'], '84206.net') && !str_contains($_SERVER['HTTP_HOST'], '127.0.0.1')) {
 //            iconv_set_encoding("internal_encoding", "UTF-8");
             ini_set('default_charset', 'UTF-8');
             $mail = new PHPMailer();
