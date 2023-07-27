@@ -170,7 +170,9 @@ class Mailer extends MailerSender
         try {
             $this->data['name'] = $this->receiver_name;
             $this->data['email'] = $this->receiver_email;
-            $this->data['time'] = date("Y-m-d H:i:s", time());
+            $this->data['site_url'] = $_ENV['EMAIL_SITE_URL'];
+            $this->data['site_logo'] = $_ENV['EMAIL_SITE_LOGO'];
+            $this->data['site_name'] = ucwords(strtolower($_ENV['EMAIL_SITE_NAME']));
             $this->html = $this->twig->render('__header.html.twig', $this->data);
 
             $this->html .= $this->twig->render($this->twig_name . '.html.twig', $this->data);

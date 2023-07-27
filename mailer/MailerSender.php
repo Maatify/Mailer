@@ -100,7 +100,12 @@ abstract class MailerSender
                 $mail->AltBody = $this->text;
 //                            }
 
-                $mail->send();
+                if(empty($_GET['stg'])) {
+                    $mail->send();
+                }else{
+                    echo $this->html;
+                    die();
+                }
 
                 return true;
             } catch (Exception $e) {
