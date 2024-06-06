@@ -37,6 +37,7 @@ class Mailer extends MailerSender
 
     private static self $instance;
 
+    private string $twig_location = __DIR__ . '/../../../../templates/email';
     public static function obj(string $email = '', string $name = '', string $language = ''): self
     {
 
@@ -52,11 +53,11 @@ class Mailer extends MailerSender
         if(empty($email)){
             $email = $_ENV['SMTP_REPLY_MAIL'];
         }
-        if(!empty($language) && file_exists(__DIR__ . '/../../../../templates/email/' . $language)){
-            $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email/' . $language);
-        }else{
-            $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email');
+        if(!empty($language) && file_exists($this->twig_location . '/' . $language)){
+            $this->twig_location = $this->twig_location . '/' . $language;
         }
+
+        $loader = new FilesystemLoader($this->twig_location);
 
         $this->twig = new Environment($loader);
 
@@ -177,6 +178,7 @@ class Mailer extends MailerSender
             $this->data['site_url'] = $_ENV['EMAIL_SITE_URL'];
             $this->data['site_logo'] = $_ENV['EMAIL_SITE_LOGO'];
             $this->data['site_name'] = ucwords(strtolower($_ENV['EMAIL_SITE_NAME']));
+
             $this->html = $this->twig->render('__header.html.twig', $this->data);
 
             $this->html .= $this->twig->render($this->twig_name . '.html.twig', $this->data);
