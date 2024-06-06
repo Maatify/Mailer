@@ -39,21 +39,25 @@ class Mailer extends MailerSender
     private static self $instance;
 
     private string $twig_location = __DIR__ . '/../../../../templates/email';
-    public static function obj(string $email = '', string $name = '', string $language = ''): self
+    public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = ''): self
     {
-
         if(empty(self::$instance))
         {
-            self::$instance = new self($email, $name, $language);
+            self::$instance = new self($email, $name, $language, $twig_location);
         }
         return self::$instance;
     }
 
-    public function __construct(string $email = '', string $name = '', string $language = '')
+    public function __construct(string $email = '', string $name = '', string $language = '', string $twig_location = '')
     {
         if(empty($email)){
             $email = $_ENV['SMTP_REPLY_MAIL'];
         }
+        
+        if(!empty($twig_location)){
+            $this->twig_location = $twig_location;
+        }
+        
         if(!empty($language) && file_exists($this->twig_location . '/' . $language)){
             $this->twig_location = $this->twig_location . '/' . $language;
             if(class_exists('App\Assist\Config\MailerConfig')){
@@ -72,6 +76,15 @@ class Mailer extends MailerSender
         $this->receiver_name = $name;
 
         $this->receiver_email = $email;
+    }
+
+    public function reInitiateSender(string $email = '', string $name = ''): self
+    {
+        $this->receiver_name = $name;
+
+        $this->receiver_email = $email;
+
+        return $this;
     }
 
     private array $data;
