@@ -20,6 +20,7 @@
 
 namespace Maatify\Mailer;
 
+use App\Assist\Config\MailerConfig;
 use Exception;
 use Maatify\Logger\Logger;
 use Twig\Environment;
@@ -55,6 +56,9 @@ class Mailer extends MailerSender
         }
         if(!empty($language) && file_exists($this->twig_location . '/' . $language)){
             $this->twig_location = $this->twig_location . '/' . $language;
+            if(class_exists('App\Assist\Config\MailerConfig')){
+               MailerConfig::obj($language);
+            }
         }
 
         $loader = new FilesystemLoader($this->twig_location);
@@ -73,11 +77,24 @@ class Mailer extends MailerSender
     private array $data;
     private string $twig_name;
 
+    private function CheckMailerConfigMethod(string $method): bool
+    {
+        return class_exists('App\Assist\Config\MailerConfig')
+               &&
+               method_exists('App\Assist\Config\MailerConfig', $method);
+    }
+
     public function ConfirmCode(string $code): bool
     {
         $this->data = ['code' => $code];
 
-        $this->subject = 'Confirm Code';
+        if($this->CheckMailerConfigMethod('subjectConfirmCode')){
+            $this->subject = MailerConfig::obj()->subjectConfirmCode();
+        }
+
+        if(empty($this->subject)){
+            $this->subject = 'Confirm Code';
+        }
 
         $this->twig_name = 'confirm';
 
@@ -145,7 +162,13 @@ class Mailer extends MailerSender
         $this->twig_name = 'confirm_link';
         $this->data = ['code' => $url];
 
-        $this->subject = 'Confirm Mail';
+        if($this->CheckMailerConfigMethod('subjectConfirmMail')){
+            $this->subject = MailerConfig::obj()->subjectConfirmMail();
+        }
+
+        if(empty($this->subject)){
+            $this->subject = 'Confirm Mail';
+        }
 
         return $this->Sender();
     }
@@ -156,7 +179,14 @@ class Mailer extends MailerSender
         $this->data = ['code' => $_ENV['SITE_URL'] . '/dashboard/forget-password/' . $code,
                        'image' => $_ENV['SITE_URL'] . '/images/letter.png'];
 
-        $this->subject = 'Reset Password';
+        if($this->CheckMailerConfigMethod('subjectResetPass')){
+            $this->subject = MailerConfig::obj()->subjectResetPass();
+        }
+
+        if(empty($this->subject)){
+            $this->subject = 'Reset Password';
+        }
+
         return $this->Sender();
     }
 
@@ -164,7 +194,14 @@ class Mailer extends MailerSender
     {
         $this->data = ['code' => $password];
 
-        $this->subject = 'Your Temporary Password';
+        if($this->CheckMailerConfigMethod('subjectTempPass')){
+            $this->subject = MailerConfig::obj()->subjectTempPass();
+        }
+
+        if(empty($this->subject)){
+            $this->subject = 'Your Temporary Password';
+        }
+
         $this->twig_name = 'temp_pass';
 
         return $this->Sender();
