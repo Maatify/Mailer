@@ -9,7 +9,7 @@
  * @link https://github.com/symfony/mailer/ (symfony/mailer),
  *
  * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
- * @copyright ©2023 Maatify.dev
+ * @copyright ©2024 Maatify.dev
  * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
  *
  * This program is distributed in the hope that it will be useful - WITHOUT
@@ -37,22 +37,26 @@ class Mailer extends MailerSender
 
     private static self $instance;
 
-    public static function obj(string $email = '', string $name = ''): self
+    public static function obj(string $email = '', string $name = '', string $language = ''): self
     {
 
         if(empty(self::$instance))
         {
-            self::$instance = new self($email, $name);
+            self::$instance = new self($email, $name, $language);
         }
         return self::$instance;
     }
 
-    public function __construct(string $email = '', string $name = '')
+    public function __construct(string $email = '', string $name = '', string $language = '')
     {
         if(empty($email)){
             $email = $_ENV['SMTP_REPLY_MAIL'];
         }
-        $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email');
+        if(!empty($language) && file_exists(__DIR__ . '/../../../../templates/email/' . $language)){
+            $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email/' . $language);
+        }else{
+            $loader = new FilesystemLoader(__DIR__ . '/../../../../templates/email');
+        }
 
         $this->twig = new Environment($loader);
 
