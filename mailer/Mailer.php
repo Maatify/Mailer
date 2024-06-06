@@ -39,6 +39,8 @@ class Mailer extends MailerSender
     private static self $instance;
 
     private string $twig_location = __DIR__ . '/../../../../templates/email';
+    private string $language = '';
+
     public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = ''): self
     {
         if(empty(self::$instance))
@@ -245,16 +247,23 @@ class Mailer extends MailerSender
      */
     public function twigLoader(string $language): void
     {
-        if (! empty($language) && file_exists($this->twig_location . '/' . $language)) {
+        if (! empty($language) && $language !== $this->language && file_exists($this->twig_location . '/' . $language)) {
             $this->twig_location = $this->twig_location . '/' . $language;
             if (class_exists('App\Assist\Config\MailerConfig')) {
                 MailerConfig::obj($language);
             }
+            $loader = new FilesystemLoader($this->twig_location);
+
+            $this->twig = new Environment($loader);
+
+            $this->language = $language;
+        }else{
+            if(empty($this->twig)){
+                $loader = new FilesystemLoader($this->twig_location);
+
+                $this->twig = new Environment($loader);
+            }
         }
-
-        $loader = new FilesystemLoader($this->twig_location);
-
-        $this->twig = new Environment($loader);
     }
 
 }
