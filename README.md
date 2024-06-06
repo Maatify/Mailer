@@ -27,7 +27,7 @@ class StgMail
     
 ### Create Env 
 
-EMAIL_SITE_URL  // => ending with slash
-EMAIL_SITE_LOGO
-EMAIL_SITE_NAME
-SITE_URL // => no slash at the end
+#### EMAIL_SITE_URL  // => ending with slash
+#### EMAIL_SITE_LOGO
+#### EMAIL_SITE_NAME
+#### SITE_URL // => no slash at the end
