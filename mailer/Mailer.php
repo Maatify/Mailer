@@ -57,17 +57,8 @@ class Mailer extends MailerSender
         if(!empty($twig_location)){
             $this->twig_location = $twig_location;
         }
-        
-        if(!empty($language) && file_exists($this->twig_location . '/' . $language)){
-            $this->twig_location = $this->twig_location . '/' . $language;
-            if(class_exists('App\Assist\Config\MailerConfig')){
-               MailerConfig::obj($language);
-            }
-        }
 
-        $loader = new FilesystemLoader($this->twig_location);
-
-        $this->twig = new Environment($loader);
+        $this->twigLoader($language);
 
         if(empty($name)){
             $name = $email;
@@ -78,11 +69,13 @@ class Mailer extends MailerSender
         $this->receiver_email = $email;
     }
 
-    public function reInitiateSender(string $email = '', string $name = ''): self
+    public function reInitiateSender(string $email = '', string $name = '', string $language = ''): self
     {
         $this->receiver_name = $name;
 
         $this->receiver_email = $email;
+
+        $this->twigLoader($language);
 
         return $this;
     }
@@ -243,6 +236,25 @@ class Mailer extends MailerSender
             Logger::RecordLog($e, __CLASS__);
             return false;
         }
+    }
+
+    /**
+     * @param   string  $language
+     *
+     * @return void
+     */
+    public function twigLoader(string $language): void
+    {
+        if (! empty($language) && file_exists($this->twig_location . '/' . $language)) {
+            $this->twig_location = $this->twig_location . '/' . $language;
+            if (class_exists('App\Assist\Config\MailerConfig')) {
+                MailerConfig::obj($language);
+            }
+        }
+
+        $loader = new FilesystemLoader($this->twig_location);
+
+        $this->twig = new Environment($loader);
     }
 
 }
