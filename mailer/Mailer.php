@@ -248,15 +248,16 @@ class Mailer extends MailerSender
     public function twigLoader(string $language): void
     {
         if (! empty($language) && $language !== $this->language && file_exists($this->twig_location . '/' . $language)) {
-            $this->twig_location = $this->twig_location . '/' . $language;
+            $this->language = $language;
+
+            $twig_location_lang = $this->twig_location . '/' . $this->language;
             if (class_exists('App\Assist\Config\MailerConfig')) {
-                MailerConfig::obj($language);
+                MailerConfig::obj($this->language);
             }
-            $loader = new FilesystemLoader($this->twig_location);
+            $loader = new FilesystemLoader($twig_location_lang);
 
             $this->twig = new Environment($loader);
 
-            $this->language = $language;
         }else{
             if(empty($this->twig)){
                 $loader = new FilesystemLoader($this->twig_location);
