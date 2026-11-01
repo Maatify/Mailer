@@ -92,7 +92,14 @@ class Mailer extends MailerSender
     private function hostSubject(string $method): ?string
     {
         $class = 'App\Assist\Config\MailerConfig';
+        // Only a host class that provides both obj() and the requested subject method is used,
+        // exactly as before: otherwise the library's own default subject applies.
         if (!class_exists($class)) {
+            return null;
+        }
+        // PHP method names are case-insensitive, as with the method_exists() check this replaces.
+        $methods = array_map('strtolower', get_class_methods($class));
+        if (!in_array('obj', $methods, true) || !in_array(strtolower($method), $methods, true)) {
             return null;
         }
         $config = $class::obj();
