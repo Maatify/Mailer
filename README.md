@@ -13,18 +13,6 @@ Official PHP library for maatify.dev Mailer handler, known by our team
 
     composer require maatify/mailer
     
-### Don't forget to create Class App\Assist\Maile
-
-```php
-namespace App\Assist\Mailer;
-
-class StgMail
-{
-    public  const stg_mailer_url = 'YOUR STG SENDER';
-}
-```
-
-    
 ### Create Env 
 
 #### EMAIL_SITE_URL  // => ending with slash
