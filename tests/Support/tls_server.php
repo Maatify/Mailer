@@ -41,6 +41,16 @@ while (true) {
         $respond('200 OK', '', '');
     } elseif (str_contains($body, 'MODE:raw')) {
         $respond('200 OK', "Content-Type: text/plain\r\n", 'not json, echoing the request: ' . $body);
+    } elseif (str_contains($body, 'MODE:list')) {
+        $respond('200 OK', "Content-Type: application/json\r\n", '[1]');
+    } elseif (str_contains($body, 'MODE:nostatus')) {
+        $respond('200 OK', "Content-Type: application/json\r\n", json_encode(['message' => 'failed']));
+    } elseif (str_contains($body, 'MODE:successfalse')) {
+        $respond('200 OK', "Content-Type: application/json\r\n", json_encode(['success' => false]));
+    } elseif (str_contains($body, 'MODE:valueerror')) {
+        $respond('200 OK', "Content-Type: application/json\r\n", json_encode(['value' => 200, 'error' => 'rejected']));
+    } elseif (str_contains($body, 'MODE:wrongstatus')) {
+        $respond('200 OK', "Content-Type: application/json\r\n", json_encode(['value' => 400]));
     } elseif (str_contains($body, 'MODE:secrets')) {
         $respond('200 OK', "Content-Type: application/json\r\n", json_encode(['value' => 'CANARY-OTP-482913', 'error' => 'token=CANARY-TOKEN', 'message' => 'CANARY-RESPONSE-FIELD']));
     } else {

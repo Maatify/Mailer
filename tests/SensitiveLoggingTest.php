@@ -91,6 +91,25 @@ final class SensitiveLoggingTest extends TestCase
         $this->assertNoCanary($logged);
     }
 
+    public function testOnlyAnExplicitAcknowledgementCountsAsAccepted(): void
+    {
+        // A loop instead of a data provider keeps the test valid for every supported PHPUnit major version.
+        $cases = [
+            'a JSON list' => ['MODE:list', 'invalid_response'],
+            'an object without a status' => ['MODE:nostatus', 'response_received'],
+            'an object reporting failure' => ['MODE:successfalse', 'response_received'],
+            'value 200 with an error' => ['MODE:valueerror', 'response_received'],
+            'a non-200 value' => ['MODE:wrongstatus', 'response_received'],
+        ];
+        foreach ($cases as $label => [$mode, $outcome]) {
+            $this->setUp();
+            $result = $this->send($this->https(), true, 'CANARY-SUBJECT ' . $mode);
+            $this->assertSame('not-sent', $result, $label);
+            $this->assertCount(1, $this->requests(), $label);
+            $this->assertStringContainsString($outcome, $this->loggedText(), $label);
+        }
+    }
+
     public function testANonJsonResponseLogsNoRawBody(): void
     {
         $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:raw');

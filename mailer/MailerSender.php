@@ -150,8 +150,8 @@ abstract class MailerSender
 
     /**
      * Sends the message to the staging mailer endpoint and reports whether it was accepted:
-     * true only when the HTTPS request completed with HTTP 200, the body is a JSON object, and the
-     * server did not report a failure (a `value` other than 200 or a non-empty `error`).
+     * true only when the HTTPS request completed with HTTP 200, the body is a JSON object, its
+     * `value` is exactly 200 (a positive acknowledgement is required) and it carries no `error`.
      */
     private function CurlJsonPost(): bool
     {
@@ -201,13 +201,13 @@ abstract class MailerSender
         if ($curl_errno > 0) {
             $outcome = 'transport_error';
         } else {
-            $response = is_string($result) ? json_decode($result, true) : null;
-            if (is_array($response) && $response !== []) {
+            // A JSON object is required: json_decode(..., true) would also turn a JSON list into an array.
+            $decoded = is_string($result) ? json_decode($result) : null;
+            if ($decoded instanceof \stdClass && (array)$decoded !== []) {
+                $response = (array)$decoded;
                 // Only a plain HTTP-style status number is ever logged; the server's own values are not.
                 $statusValue = isset($response['value']) && is_int($response['value']) && $response['value'] >= 100 && $response['value'] <= 599 ? $response['value'] : null;
-                $reportsFailure = (array_key_exists('value', $response) && $response['value'] !== 200)
-                    || (!empty($response['error']));
-                $accepted = $httpCode == 200 && !$reportsFailure;
+                $accepted = $httpCode == 200 && ($response['value'] ?? null) === 200 && empty($response['error']);
             } else {
                 $outcome = ($httpCode != 200) ? 'http_error' : 'invalid_response';
             }
