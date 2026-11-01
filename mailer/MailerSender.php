@@ -45,7 +45,7 @@ abstract class MailerSender
         try {
             //Server settings
             //            $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-            //            $mail->isSMTP();                                            //Send using SMTP
+            $mail->isSMTP();                                           //Send using SMTP (PHPMailer defaults to PHP mail() otherwise)
             $mail->Host =
                 $_ENV['SMTP_HOST'];                                    //Set the SMTP server to send through
             $mail->SMTPAuth =
@@ -98,11 +98,11 @@ abstract class MailerSender
             $mail->AltBody = $this->text;
 //                            }
 
-            if(empty($_GET['stg'])) {
-                $mail->send();
-            }else{
-                echo $this->html;
-                die();
+            if (!$mail->send()) {
+                // PHPMailer is not in exception mode, so a failed send is reported as false; log only a fixed marker.
+                Logger::RecordLog(message: ['error' => 'mail_send_failed', 'transport' => 'smtp']);
+
+                return false;
             }
 
             return true;
