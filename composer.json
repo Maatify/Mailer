@@ -1,49 +1,29 @@
 {
   "name": "maatify/mailer",
-  "description": "Official PHP library for maatify.dev Mailer handler, known by our team",
-  "type": "library",
+  "description": "PHP library that renders Twig e-mail templates and sends them through SMTP (PHPMailer).",
   "keywords": [
-    "PHP",
-    "Mailer",
-    "Handler"
+    "mailer",
+    "email",
+    "smtp",
+    "twig",
+    "phpmailer",
+    "php",
+    "maatify"
   ],
-  "homepage": "https://github.com/Maatify/",
+  "homepage": "https://github.com/Maatify/Mailer",
+  "type": "library",
   "license": "proprietary",
   "authors": [
     {
-      "name": "Mohamed Abdulalim",
-      "email": "mohamed@maatify.dev",
-      "homepage": "https://www.maatify.com/",
-      "role": "Backend Developer"
-    },
-    {
-      "name": "Ahmed Fawzy",
-      "email": "a.fawzy@maatify.dev",
-      "homepage": "https://www.maatify.com/",
-      "role": "Frontend Developer"
-    },
-    {
-      "name": "Ahmed Abdullah",
-      "email": "a.abdullah@maatify.dev",
-      "homepage": "https://www.maatify.com/",
-      "role": "Android Developer"
-    },
-    {
-      "name": "Elmokhtar Ahmed",
-      "email": "mokhtar@maatify.dev",
-      "homepage": "https://www.maatify.com/",
-      "role": "IOS Developer"
+      "name": "Maatify",
+      "email": "support@maatify.dev",
+      "homepage": "https://maatify.dev"
     }
   ],
-  "require": {
-    "vlucas/phpdotenv": "^5.6",
-    "maatify/logger": "^5.0 || ^7.0",
-    "phpmailer/phpmailer": "^6.10",
-    "symfony/mailer": "^7.2",
-    "symfony/twig-bundle": "^7.2"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9.6 || ^10 || ^11 || ^12"
+  "support": {
+    "issues": "https://github.com/Maatify/Mailer/issues",
+    "source": "https://github.com/Maatify/Mailer",
+    "security": "https://github.com/Maatify/Mailer/security/policy"
   },
   "autoload": {
     "psr-4": {
@@ -55,8 +35,41 @@
       "Maatify\\Mailer\\Tests\\": "tests/"
     }
   },
+  "require": {
+    "ext-openssl": "*",
+    "maatify/logger": "^5.0 || ^7.0",
+    "php": ">=8.4.27 <8.5.0 || >=8.5.12 <8.6.0",
+    "phpmailer/phpmailer": "^6.10",
+    "twig/twig": "^3.27"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11 || ^12"
+  },
   "scripts": {
     "test": "phpunit",
     "test:logger-matrix": "bash scripts/verify-logger-matrix.sh"
-  }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "platform": {
+      "php": "8.4.27"
+    },
+    "policy": {
+      "advisories": {
+        "block": true,
+        "audit": "fail"
+      },
+      "malware": {
+        "block": true,
+        "block-scope": "all",
+        "audit": "fail"
+      },
+      "abandoned": {
+        "audit": "fail"
+      }
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }

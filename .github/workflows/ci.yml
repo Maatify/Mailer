@@ -22,12 +22,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # maatify/logger 5.1.x needs PHP 8.3+ and 7.x needs 8.4.27+/8.5.12+, so older PHP runs with 5.0.1 only.
+        # The package requires PHP 8.4.27+ or 8.5.12+; setup-php installs the latest patch of each minor.
+        # maatify/logger 5.1.x needs PHP 8.3+ and 7.x needs 8.4.27+/8.5.12+.
         include:
-          - { php: '8.2', logger: '5.0.1' }
-          - { php: '8.3', logger: '5.0.1' }
-          - { php: '8.3', logger: '5.1.0' }
-          - { php: '8.3', logger: '5.1.2' }
+          - { php: '8.4', logger: '5.0.1' }
+          - { php: '8.4', logger: '5.1.0' }
           - { php: '8.4', logger: '5.1.2' }
           - { php: '8.4', logger: '7.0.0' }
           - { php: '8.5', logger: '5.1.2' }
