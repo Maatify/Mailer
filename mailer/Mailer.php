@@ -235,7 +235,7 @@ class Mailer extends MailerSender
             return $this->SendEmail();
 
         }catch (SyntaxError|RuntimeError|LoaderError|Exception $e){
-            Logger::RecordLog($e, __CLASS__);
+            Logger::RecordLog(message: $e, logFile: __CLASS__);
             return false;
         }
     }

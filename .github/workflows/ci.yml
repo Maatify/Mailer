@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Verify (PHP ${{ matrix.php }}, logger ${{ matrix.logger }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # maatify/logger 5.1.x needs PHP 8.3+ and 7.x needs 8.4.27+/8.5.12+, so older PHP runs with 5.0.1 only.
+        include:
+          - { php: '8.2', logger: '5.0.1' }
+          - { php: '8.3', logger: '5.0.1' }
+          - { php: '8.3', logger: '5.1.0' }
+          - { php: '8.3', logger: '5.1.2' }
+          - { php: '8.4', logger: '5.1.2' }
+          - { php: '8.4', logger: '7.0.0' }
+          - { php: '8.5', logger: '5.1.2' }
+          - { php: '8.5', logger: '7.0.0' }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Lint PHP
+        run: |
+          set -euo pipefail
+          find mailer tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Regression suite against the logger release
+        env:
+          LOGGER_VERSION: ${{ matrix.logger }}
+        run: scripts/verify-logger-matrix.sh "${LOGGER_VERSION}"
+
+  workflow-lint:
+    name: Workflow lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      ACTIONLINT_VERSION: '1.7.12'
+      ACTIONLINT_SHA256: '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$archive" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" actionlint
+
+      - name: Lint workflows
+        run: ./actionlint -color .github/workflows/*.yml
+
+  gate:
+    name: CI gate
+    if: always()
+    needs: [verify, workflow-lint]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every upstream job to succeed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          set -euo pipefail
+          echo "Upstream results: ${RESULTS}"
+          for result in ${RESULTS}; do
+            if [ "${result}" != "success" ]; then
+              echo "A required job did not succeed (${result})." >&2
+              exit 1
+            fi
+          done
