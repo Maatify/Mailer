@@ -29,6 +29,8 @@ find mailer tests scripts -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
 
 scripts/ci/check-whitespace.sh
 
+composer analyse
+
 composer test
 
 composer audit --no-interaction --abandoned=fail

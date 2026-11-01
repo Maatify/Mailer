@@ -23,6 +23,7 @@ namespace Maatify\Mailer;
 use Exception;
 use Maatify\Logger\Logger;
 use PHPMailer\PHPMailer\PHPMailer;
+use RuntimeException;
 
 /**
  *@author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
@@ -37,6 +38,31 @@ abstract class MailerSender
     protected string $reply_email;
     protected string $reply_name;
     protected string $subject;
+    /**
+     * A configuration setting read from the environment. The library's settings are a documented
+     * contract of the host application; a missing or non-string setting is reported instead of
+     * being passed on as an untyped value.
+     */
+    protected static function env(string $key): string
+    {
+        $value = $_ENV[$key] ?? null;
+        if (!is_string($value)) {
+            throw new RuntimeException('Missing environment setting ' . $key);
+        }
+
+        return $value;
+    }
+
+    protected static function envInt(string $key): int
+    {
+        $value = filter_var($_ENV[$key] ?? null, FILTER_VALIDATE_INT);
+        if ($value === false) {
+            throw new RuntimeException('Environment setting ' . $key . ' is not an integer');
+        }
+
+        return $value;
+    }
+
     protected function SendEmail(): bool
     {
 //            iconv_set_encoding("internal_encoding", "UTF-8");
@@ -47,21 +73,21 @@ abstract class MailerSender
             //            $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
             $mail->isSMTP();                                           //Send using SMTP (PHPMailer defaults to PHP mail() otherwise)
             $mail->Host =
-                $_ENV['SMTP_HOST'];                                    //Set the SMTP server to send through
+                self::env('SMTP_HOST');                                    //Set the SMTP server to send through
             $mail->SMTPAuth =
                 true;                                                  //Enable SMTP authentication
             $mail->Username =
-                $_ENV['SMTP_USER'];                                    //SMTP username
+                self::env('SMTP_USER');                                    //SMTP username
             $mail->Password =
-                $_ENV['SMTP_PASS'];                                    //SMTP password
+                self::env('SMTP_PASS');                                    //SMTP password
             $mail->SMTPSecure =
                 PHPMailer::ENCRYPTION_SMTPS;                           //Enable implicit TLS encryption
             $mail->Port =
-                $_ENV['SMTP_PORT'];                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+                self::envInt('SMTP_PORT');                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
             //Recipients
-            $mail->setFrom($_ENV['SMTP_FROM_MAIL'],
-                $_ENV['SMTP_FROM_NAME']);
+            $mail->setFrom(self::env('SMTP_FROM_MAIL'),
+                self::env('SMTP_FROM_NAME'));
             //            $mail->addAddress($email);     //Add a recipient
             $mail->addAddress($this->receiver_email,
                 (! empty($this->receiver_name) ? $this->receiver_name

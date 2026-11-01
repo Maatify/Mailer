@@ -44,9 +44,11 @@
   },
   "require-dev": {
     "composer/semver": "^3.4",
+    "phpstan/phpstan": "^2",
     "phpunit/phpunit": "^11 || ^12"
   },
   "scripts": {
+    "analyse": "phpstan analyse --no-progress --memory-limit=512M",
     "test": "phpunit",
     "test:logger-matrix": "bash scripts/verify-logger-matrix.sh"
   },
