@@ -15,7 +15,7 @@ if (!is_array($arguments) || count($arguments) !== 4) {
 $context = stream_context_create(['ssl' => ['local_cert' => $pem, 'verify_peer' => false, 'allow_self_signed' => true]]);
 $server = stream_socket_server("tls://127.0.0.1:$port", $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context);
 if ($server === false) {
-    fwrite(STDERR, "cannot listen: $errstr\n");
+    fwrite(STDERR, 'cannot listen: ' . (is_string($errstr) ? $errstr : 'unknown error') . "\n");
     exit(1);
 }
 
