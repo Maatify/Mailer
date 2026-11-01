@@ -1,6 +1,7 @@
 <?php
 
-// Sends one e-mail through the library's HTTP transport in its own process.
+// Sends one e-mail through the library's HTTP transport in its own process and prints
+// `sent` or `not-sent`, the boolean the library returned to its caller.
 // Usage: php send_runner.php <endpoint-url> <ca-file|-> <subject> [weaken]
 // "weaken" makes the subclass try to switch certificate verification off through
 // transportOptions(), which the library must ignore.
@@ -44,4 +45,5 @@ final class RunnerSender extends MailerSender
     }
 }
 
-(new RunnerSender($caFile, $weaken, $subject))->send();
+// The result the caller of SendEmail() receives is printed so tests can assert it.
+echo (new RunnerSender($caFile, $weaken, $subject))->send() ? 'sent' : 'not-sent';

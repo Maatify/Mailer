@@ -118,8 +118,7 @@ abstract class MailerSender
                 return false;
             }
         }else{
-            $this->CurlJsonPost();
-            return true;
+            return $this->CurlJsonPost();
         }
     }
 
@@ -149,76 +148,84 @@ abstract class MailerSender
         return [];
     }
 
-    private function CurlJsonPost(): void
+    /**
+     * Sends the message to the staging mailer endpoint and reports whether it was accepted:
+     * true only when the HTTPS request completed with HTTP 200, the body is a JSON object, and the
+     * server did not report a failure (a `value` other than 200 or a non-empty `error`).
+     */
+    private function CurlJsonPost(): bool
     {
         $url = StgMail::stg_mailer_url;
-        if(!empty($url)) {
-            $url = StgMail::stg_mailer_url;
-            $params = [
-                'name'    => $this->receiver_name,
-                'email'   => $this->receiver_email,
-                'subject' => $this->subject,
-                'message' => $this->html,
-            ];
-            $scheme = parse_url($url, PHP_URL_SCHEME);
-            if (!is_string($scheme) || strtolower($scheme) !== 'https') {
-                Logger::RecordLog(message: [
-                    'outcome' => 'insecure_endpoint_refused',
-                    'endpoint' => self::logSafeEndpoint($url),
-                ], logFile: __CLASS__);
-
-                return;
-            }
-            $ch = curl_init();
-            curl_setopt_array($ch, $this->transportOptions());
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, 0);
-            if (! empty($params)) {
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
-            }
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-            ));
-            $result = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curl_errno = curl_errno($ch);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
-            $outcome = 'response_received';
-            $statusValue = null;
-            if ($curl_errno > 0) {
-                $outcome = 'transport_error';
-                $response['value'] = 400;
-                $response['error'] = "(err-" . __METHOD__ . ") cURL Error ($curl_errno): $curl_error";
-            } else {
-                if ($resultArray = json_decode($result, true)) {
-                    $response = $resultArray;
-                    // Only a plain HTTP-style status number is ever logged; the server's own values are not.
-                    $statusValue = isset($response['value']) && is_int($response['value']) && $response['value'] >= 100 && $response['value'] <= 599 ? $response['value'] : null;
-                } else {
-                    $outcome = ($httpCode != 200) ? 'http_error' : 'invalid_response';
-                    $response['value'] = 400;
-                    $response['error'] = ($httpCode != 200) ? "Error header response " . $httpCode : "There is no response from server (err-" . __METHOD__ . ")";
-                    $response['result'] = $result;
-                }
-            }
-            // Fixed, pre-defined diagnostics only: never request data, response bodies or server-supplied text.
-            Logger::RecordLog(message: [
-                'outcome' => $outcome,
-                'endpoint' => self::logSafeEndpoint($url),
-                'param_names' => array_keys($params),
-                'http_code' => $httpCode,
-                'curl_errno' => $curl_errno,
-                'status' => $statusValue,
-            ], logFile: __CLASS__);
+        if (empty($url)) {
+            return false;
         }
+
+        $params = [
+            'name'    => $this->receiver_name,
+            'email'   => $this->receiver_email,
+            'subject' => $this->subject,
+            'message' => $this->html,
+        ];
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (!is_string($scheme) || strtolower($scheme) !== 'https') {
+            Logger::RecordLog(message: [
+                'outcome' => 'insecure_endpoint_refused',
+                'endpoint' => self::logSafeEndpoint($url),
+            ], logFile: __CLASS__);
+
+            return false;
+        }
+        $ch = curl_init();
+        curl_setopt_array($ch, $this->transportOptions());
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+        ));
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_errno = curl_errno($ch);
+        curl_close($ch);
+
+        $outcome = 'response_received';
+        $statusValue = null;
+        $accepted = false;
+        if ($curl_errno > 0) {
+            $outcome = 'transport_error';
+        } else {
+            $response = is_string($result) ? json_decode($result, true) : null;
+            if (is_array($response) && $response !== []) {
+                // Only a plain HTTP-style status number is ever logged; the server's own values are not.
+                $statusValue = isset($response['value']) && is_int($response['value']) && $response['value'] >= 100 && $response['value'] <= 599 ? $response['value'] : null;
+                $reportsFailure = (array_key_exists('value', $response) && $response['value'] !== 200)
+                    || (!empty($response['error']));
+                $accepted = $httpCode == 200 && !$reportsFailure;
+            } else {
+                $outcome = ($httpCode != 200) ? 'http_error' : 'invalid_response';
+            }
+            if ($outcome === 'response_received' && $httpCode != 200) {
+                $outcome = 'http_error';
+            }
+        }
+        // Fixed, pre-defined diagnostics only: never request data, response bodies or server-supplied text.
+        Logger::RecordLog(message: [
+            'outcome' => $outcome,
+            'endpoint' => self::logSafeEndpoint($url),
+            'param_names' => array_keys($params),
+            'http_code' => $httpCode,
+            'curl_errno' => $curl_errno,
+            'status' => $statusValue,
+            'accepted' => $accepted,
+        ], logFile: __CLASS__);
+
+        return $accepted;
     }
 }

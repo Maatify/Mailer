@@ -71,7 +71,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testAnAcceptedRequestLogsOnlyFixedDiagnostics(): void
     {
-        $this->send($this->https(), true, 'CANARY-SUBJECT MODE:ok');
+        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:ok');
+        $this->assertSame('sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertCount(1, $this->requests());
         $this->assertStringContainsString('response_received', $logged);
@@ -82,7 +83,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testSecretsInTheServerValueAndErrorAreNotLogged(): void
     {
-        $this->send($this->https() . '?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:secrets');
+        $result = $this->send($this->https() . '?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:secrets');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertCount(1, $this->requests());
         $this->assertStringContainsString('response_received', $logged);
@@ -91,7 +93,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testANonJsonResponseLogsNoRawBody(): void
     {
-        $this->send($this->https(), true, 'CANARY-SUBJECT MODE:raw');
+        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:raw');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertStringContainsString('invalid_response', $logged);
         $this->assertNoCanary($logged);
@@ -99,7 +102,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testAnEmptyResponseLogsNoRequestValues(): void
     {
-        $this->send($this->https(), true, 'CANARY-SUBJECT MODE:empty');
+        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:empty');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertStringContainsString('invalid_response', $logged);
         $this->assertNoCanary($logged);
@@ -107,7 +111,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testAnUntrustedCertificateIsRejectedBeforeAnyRequestIsSent(): void
     {
-        $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok');
+        $result = $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertSame([], $this->requests(), 'No request may reach a server whose certificate is not trusted.');
         $this->assertStringContainsString('transport_error', $logged);
@@ -116,7 +121,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testTransportOptionsCannotSwitchVerificationOff(): void
     {
-        $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok', true);
+        $result = $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok', true);
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertSame([], $this->requests(), 'A subclass must not be able to disable certificate verification.');
         $this->assertStringContainsString('transport_error', $logged);
@@ -125,7 +131,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testAPlainHttpEndpointIsRefusedAndNothingIsSent(): void
     {
-        $this->send('http://127.0.0.1:' . self::$port . '/mailer?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:ok');
+        $result = $this->send('http://127.0.0.1:' . self::$port . '/mailer?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:ok');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertSame([], $this->requests());
         $this->assertStringContainsString('insecure_endpoint_refused', $logged);
@@ -134,7 +141,8 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testARedirectIsNotFollowed(): void
     {
-        $this->send($this->https(), true, 'CANARY-SUBJECT MODE:redirect');
+        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:redirect');
+        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
         $logged = $this->loggedText();
         $this->assertCount(1, $this->requests());
         $this->assertStringContainsString('http_error', $logged);
@@ -146,17 +154,17 @@ final class SensitiveLoggingTest extends TestCase
         return 'https://127.0.0.1:' . self::$port . '/mailer';
     }
 
-    private function send(string $url, bool $trusted, string $subject, bool $weaken = false): void
+    private function send(string $url, bool $trusted, string $subject, bool $weaken = false): string
     {
-        shell_exec(sprintf(
-            '%s -d display_errors=0 %s %s %s %s %s >/dev/null 2>&1',
+        return trim((string)shell_exec(sprintf(
+            '%s -d display_errors=0 %s %s %s %s %s 2>/dev/null',
             escapeshellarg(PHP_BINARY),
             escapeshellarg(__DIR__ . '/Support/send_runner.php'),
             escapeshellarg($url),
             escapeshellarg($trusted ? self::$pem : '-'),
             escapeshellarg($subject),
             $weaken ? 'weaken' : ''
-        ));
+        )));
     }
 
     /** @return list<array{line: string, body: string}> */
