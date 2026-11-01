@@ -164,7 +164,7 @@ abstract class MailerSender
                     $response['result'] = $result;
                 }
             }
-            Logger::RecordLog([$response, $url, $params], __CLASS__);
+            Logger::RecordLog(message: [$response, $url, $params], logFile: __CLASS__);
         }
     }
 }
