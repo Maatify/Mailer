@@ -16,13 +16,43 @@ concurrency:
 
 jobs:
   verify:
-    name: Verify (PHP ${{ matrix.php }}, logger ${{ matrix.logger }})
+    name: Verify (PHP ${{ matrix.php }}, ${{ matrix.dependencies }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        # The package requires PHP 8.4.27+ or 8.5.12+; setup-php installs the latest patch of each minor.
+        include:
+          - { php: '8.4', dependencies: latest }
+          - { php: '8.5', dependencies: latest }
+          - { php: '8.4', dependencies: lowest }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Verify
+        env:
+          CI_DIFF_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DEPENDENCIES: ${{ matrix.dependencies }}
+        run: scripts/ci/verify.sh "${DEPENDENCIES}"
+
+  logger-compat:
+    name: Logger compatibility (PHP ${{ matrix.php }}, logger ${{ matrix.logger }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
         # maatify/logger 5.1.x needs PHP 8.3+ and 7.x needs 8.4.27+/8.5.12+.
         include:
           - { php: '8.4', logger: '5.0.1' }
@@ -43,11 +73,6 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: composer:v2
           coverage: none
-
-      - name: Lint PHP
-        run: |
-          set -euo pipefail
-          find mailer tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Regression suite against the logger release
         env:
@@ -81,7 +106,7 @@ jobs:
   gate:
     name: CI gate
     if: always()
-    needs: [verify, workflow-lint]
+    needs: [verify, logger-compat, workflow-lint]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
