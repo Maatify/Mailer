@@ -109,7 +109,12 @@ abstract class MailerSender
 
                 return true;
             } catch (Exception $e) {
-                Logger::RecordLog([$e, $mail->ErrorInfo]);
+                Logger::RecordLog(message: [
+                    'error' => 'mail_send_failed',
+                    'exception' => get_class($e),
+                    'code' => $e->getCode(),
+                    'info' => self::logSafeText((string)$mail->ErrorInfo),
+                ]);
 
                 return false;
             }
@@ -117,6 +122,28 @@ abstract class MailerSender
             $this->CurlJsonPost();
             return true;
         }
+    }
+
+    /**
+     * Masks every token that contains an "@", so recipient and sender addresses
+     * never reach the log through exception or transport messages.
+     */
+    protected static function logSafeText(string $text): string
+    {
+        return preg_replace('/\S*@\S*/', '[masked]', $text) ?? '[unavailable]';
+    }
+
+    /**
+     * Scheme, host, port and path only: no credentials, query string or fragment.
+     */
+    protected static function logSafeUrl(string $url): string
+    {
+        $parts = parse_url($url);
+        if (!is_array($parts) || empty($parts['host'])) {
+            return '[unavailable]';
+        }
+
+        return ($parts['scheme'] ?? 'http') . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '') . ($parts['path'] ?? '');
     }
 
     private function CurlJsonPost(): void
@@ -139,8 +166,8 @@ abstract class MailerSender
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
@@ -164,7 +191,13 @@ abstract class MailerSender
                     $response['result'] = $result;
                 }
             }
-            Logger::RecordLog(message: [$response, $url, $params], logFile: __CLASS__);
+            Logger::RecordLog(message: [
+                'url' => self::logSafeUrl($url),
+                'param_names' => array_keys($params),
+                'http_code' => $httpCode,
+                'value' => isset($response['value']) && is_scalar($response['value']) ? $response['value'] : null,
+                'error' => isset($response['error']) && is_scalar($response['error']) ? self::logSafeText((string)$response['error']) : null,
+            ], logFile: __CLASS__);
         }
     }
 }
