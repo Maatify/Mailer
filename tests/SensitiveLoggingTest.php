@@ -3,218 +3,77 @@
 namespace Maatify\Mailer\Tests;
 
 use Maatify\Logger\Logger;
+use Maatify\Mailer\Mailer;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 /**
- * Recipient data, message content and anything the mail server sends back must
- * never reach the log, whatever maatify/logger version is installed, and the
- * HTTP transport must be HTTPS-only with real certificate verification. Each
- * send runs in its own process (tests/Support/send_runner.php) against a local
- * HTTPS stand-in; the real mailer endpoint is never contacted.
+ * Recipient data, message content and exception text must never reach the log,
+ * whatever maatify/logger version is installed, and the library no longer has
+ * the HTTP relay transport.
  */
 final class SensitiveLoggingTest extends TestCase
 {
-    private static int $pid = 0;
-    private static int $port = 0;
-    private static string $dir = '';
-    private static string $pem = '';
-    private static string $requestLog = '';
+    private const CANARIES = ['CANARY-USER', 'CANARY-NAME', 'CANARY-OTP', 'CANARY-UNKNOWN-TAG', 'canary.example'];
+
     /** @var array<string, int> */
     private array $sizesBefore = [];
-
-    public static function setUpBeforeClass(): void
-    {
-        self::$dir = sys_get_temp_dir() . '/mailer-test-' . bin2hex(random_bytes(4));
-        mkdir(self::$dir);
-        self::$pem = self::$dir . '/server.pem';
-        self::$requestLog = self::$dir . '/requests.log';
-        self::generateCertificate(self::$pem);
-
-        $socket = stream_socket_server('tcp://127.0.0.1:0');
-        $name = stream_socket_get_name($socket, false);
-        fclose($socket);
-        self::$port = (int)substr($name, strrpos($name, ':') + 1);
-        self::$pid = (int)trim((string)shell_exec(sprintf(
-            '%s %s %d %s %s >/dev/null 2>&1 & echo $!',
-            escapeshellarg(PHP_BINARY),
-            escapeshellarg(__DIR__ . '/Support/tls_server.php'),
-            self::$port,
-            escapeshellarg(self::$pem),
-            escapeshellarg(self::$requestLog)
-        )));
-        for ($i = 0; $i < 50; $i++) {
-            $probe = @fsockopen('127.0.0.1', self::$port, $errno, $errstr, 0.1);
-            if ($probe) {
-                fclose($probe);
-                return;
-            }
-            usleep(100000);
-        }
-        self::fail('The local HTTPS stand-in did not start.');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        if (self::$pid > 0) {
-            shell_exec('kill ' . self::$pid . ' 2>/dev/null');
-        }
-        array_map('unlink', glob(self::$dir . '/*') ?: []);
-        @rmdir(self::$dir);
-    }
+    private string $templates = '';
 
     protected function setUp(): void
     {
-        file_put_contents(self::$requestLog, '');
         $this->sizesBefore = $this->logSizes();
+        $this->templates = sys_get_temp_dir() . '/mailer-templates-' . bin2hex(random_bytes(4));
+        mkdir($this->templates);
+        // A template that fails to compile: Twig puts the offending text in its exception message.
+        file_put_contents($this->templates . '/__header.html.twig', '{% CANARY-UNKNOWN-TAG %}');
     }
 
-    public function testAnAcceptedRequestLogsOnlyFixedDiagnostics(): void
+    protected function tearDown(): void
     {
-        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:ok');
-        $this->assertSame('sent', $result, 'The caller must be told whether the message was accepted.');
+        array_map('unlink', glob($this->templates . '/*') ?: []);
+        @rmdir($this->templates);
+    }
+
+    public function testATemplateFailureLogsOnlyTheExceptionClassCodeAndLine(): void
+    {
+        $_ENV += ['EMAIL_SITE_URL' => 'https://site.example/', 'EMAIL_SITE_LOGO' => 'logo.png', 'EMAIL_SITE_NAME' => 'site', 'SITE_URL' => 'https://site.example'];
+        $mailer = new Mailer('CANARY-USER@canary.example', 'CANARY-NAME', '', $this->templates);
+
+        $this->assertFalse($mailer->ConfirmCode('CANARY-OTP-482913'));
+
         $logged = $this->loggedText();
-        $this->assertCount(1, $this->requests());
-        $this->assertStringContainsString('response_received', $logged);
-        $this->assertStringContainsString('param_names', $logged);
-        $this->assertStringNotContainsString('/mailer', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testSecretsInTheServerValueAndErrorAreNotLogged(): void
-    {
-        $result = $this->send($this->https() . '?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:secrets');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertCount(1, $this->requests());
-        $this->assertStringContainsString('response_received', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testOnlyAnExplicitAcknowledgementCountsAsAccepted(): void
-    {
-        // A loop instead of a data provider keeps the test valid for every supported PHPUnit major version.
-        $cases = [
-            'a JSON list' => ['MODE:list', 'invalid_response'],
-            'an object without a status' => ['MODE:nostatus', 'response_received'],
-            'an object reporting failure' => ['MODE:successfalse', 'response_received'],
-            'value 200 with an error' => ['MODE:valueerror', 'response_received'],
-            'a non-200 value' => ['MODE:wrongstatus', 'response_received'],
-        ];
-        foreach ($cases as $label => [$mode, $outcome]) {
-            $this->setUp();
-            $result = $this->send($this->https(), true, 'CANARY-SUBJECT ' . $mode);
-            $this->assertSame('not-sent', $result, $label);
-            $this->assertCount(1, $this->requests(), $label);
-            $this->assertStringContainsString($outcome, $this->loggedText(), $label);
-        }
-    }
-
-    public function testANonJsonResponseLogsNoRawBody(): void
-    {
-        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:raw');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertStringContainsString('invalid_response', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testAnEmptyResponseLogsNoRequestValues(): void
-    {
-        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:empty');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertStringContainsString('invalid_response', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testAnUntrustedCertificateIsRejectedBeforeAnyRequestIsSent(): void
-    {
-        $result = $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertSame([], $this->requests(), 'No request may reach a server whose certificate is not trusted.');
-        $this->assertStringContainsString('transport_error', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testTransportOptionsCannotSwitchVerificationOff(): void
-    {
-        $result = $this->send($this->https(), false, 'CANARY-SUBJECT MODE:ok', true);
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertSame([], $this->requests(), 'A subclass must not be able to disable certificate verification.');
-        $this->assertStringContainsString('transport_error', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testAPlainHttpEndpointIsRefusedAndNothingIsSent(): void
-    {
-        $result = $this->send('http://127.0.0.1:' . self::$port . '/mailer?key=CANARY-URL-KEY', true, 'CANARY-SUBJECT MODE:ok');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertSame([], $this->requests());
-        $this->assertStringContainsString('insecure_endpoint_refused', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    public function testARedirectIsNotFollowed(): void
-    {
-        $result = $this->send($this->https(), true, 'CANARY-SUBJECT MODE:redirect');
-        $this->assertSame('not-sent', $result, 'The caller must be told whether the message was accepted.');
-        $logged = $this->loggedText();
-        $this->assertCount(1, $this->requests());
-        $this->assertStringContainsString('http_error', $logged);
-        $this->assertNoCanary($logged);
-    }
-
-    private function https(): string
-    {
-        return 'https://127.0.0.1:' . self::$port . '/mailer';
-    }
-
-    private function send(string $url, bool $trusted, string $subject, bool $weaken = false): string
-    {
-        return trim((string)shell_exec(sprintf(
-            '%s -d display_errors=0 %s %s %s %s %s 2>/dev/null',
-            escapeshellarg(PHP_BINARY),
-            escapeshellarg(__DIR__ . '/Support/send_runner.php'),
-            escapeshellarg($url),
-            escapeshellarg($trusted ? self::$pem : '-'),
-            escapeshellarg($subject),
-            $weaken ? 'weaken' : ''
-        )));
-    }
-
-    /** @return list<array{line: string, body: string}> */
-    private function requests(): array
-    {
-        $lines = array_filter(explode("\n", (string)file_get_contents(self::$requestLog)));
-
-        return array_values(array_map(static fn (string $line): array => json_decode($line, true), $lines));
-    }
-
-    private function assertNoCanary(string $logged): void
-    {
-        foreach (['CANARY-USER', 'CANARY-NAME', 'CANARY-SUBJECT', 'CANARY-OTP', 'CANARY-TOKEN', 'CANARY-URL-KEY', 'CANARY-RESPONSE-FIELD', 'canary.example'] as $canary) {
+        $this->assertStringContainsString('Twig', $logged);
+        foreach (self::CANARIES as $canary) {
             $this->assertStringNotContainsString($canary, $logged);
         }
     }
 
-    private static function generateCertificate(string $pem): void
+    public function testNoLogCallPassesExceptionTextOrMessageData(): void
     {
-        $config = self::$dir . '/openssl.cnf';
-        file_put_contents($config, "[req]\ndistinguished_name=dn\nx509_extensions=v3\nprompt=no\n[dn]\nCN=127.0.0.1\n[v3]\nsubjectAltName=IP:127.0.0.1\nbasicConstraints=CA:TRUE\n");
-        $options = ['config' => $config, 'x509_extensions' => 'v3', 'req_extensions' => 'v3', 'private_key_bits' => 2048];
-        $key = openssl_pkey_new($options);
-        $csr = $key ? openssl_csr_new(['commonName' => '127.0.0.1'], $key, $options) : false;
-        $cert = $csr ? openssl_csr_sign($csr, null, $key, 1, $options) : false;
-        if ($key === false || $csr === false || $cert === false) {
-            self::fail('Could not generate the test certificate: ' . openssl_error_string());
+        $calls = 0;
+        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+            $code = (string)preg_replace('~//[^\n]*|/\*.*?\*/~s', '', (string)file_get_contents($file));
+            preg_match_all('/Logger::RecordLog\((.*?)\);/s', $code, $matches);
+            foreach ($matches[1] as $arguments) {
+                $calls++;
+                foreach (['getMessage', 'ErrorInfo', 'getTraceAsString', '->html', '->text', 'receiver_', 'reply_', '->subject', '$_POST', '$_GET', '$_ENV'] as $forbidden) {
+                    $this->assertStringNotContainsString($forbidden, $arguments, basename($file));
+                }
+                $this->assertDoesNotMatchRegularExpression('/message:\s*\$e\b/', $arguments, basename($file) . ': a raw throwable is logged with its message and trace');
+            }
         }
-        openssl_x509_export($cert, $certPem);
-        openssl_pkey_export($key, $keyPem, null, $options);
-        file_put_contents($pem, $certPem . $keyPem);
+        $this->assertGreaterThan(0, $calls, 'No Logger::RecordLog() call was found; the check would be vacuous.');
+    }
+
+    public function testTheHttpRelayTransportIsGone(): void
+    {
+        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+            $source = (string)file_get_contents($file);
+            $this->assertStringNotContainsString('StgMail', $source, basename($file));
+            $this->assertStringNotContainsString('curl_', $source, basename($file));
+            $this->assertStringNotContainsString('CURLOPT_', $source, basename($file));
+        }
     }
 
     /**
