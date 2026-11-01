@@ -113,7 +113,6 @@ abstract class MailerSender
                     'error' => 'mail_send_failed',
                     'exception' => get_class($e),
                     'code' => $e->getCode(),
-                    'info' => self::logSafeText((string)$mail->ErrorInfo),
                 ]);
 
                 return false;
@@ -125,25 +124,29 @@ abstract class MailerSender
     }
 
     /**
-     * Masks every token that contains an "@", so recipient and sender addresses
-     * never reach the log through exception or transport messages.
+     * Scheme, host and port only: no credentials, path, query string or fragment,
+     * because any of them can carry a secret.
      */
-    protected static function logSafeText(string $text): string
-    {
-        return preg_replace('/\S*@\S*/', '[masked]', $text) ?? '[unavailable]';
-    }
-
-    /**
-     * Scheme, host, port and path only: no credentials, query string or fragment.
-     */
-    protected static function logSafeUrl(string $url): string
+    protected static function logSafeEndpoint(string $url): string
     {
         $parts = parse_url($url);
         if (!is_array($parts) || empty($parts['host'])) {
             return '[unavailable]';
         }
 
-        return ($parts['scheme'] ?? 'http') . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '') . ($parts['path'] ?? '');
+        return ($parts['scheme'] ?? 'https') . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
+    }
+
+    /**
+     * Extra cURL options for the HTTP transport, for example a CA bundle. They are
+     * applied first, so the fixed security options below (HTTPS only, certificate
+     * and host verification, no redirects) always win and cannot be switched off.
+     *
+     * @return array<int, mixed>
+     */
+    protected function transportOptions(): array
+    {
+        return [];
     }
 
     private function CurlJsonPost(): void
@@ -157,7 +160,17 @@ abstract class MailerSender
                 'subject' => $this->subject,
                 'message' => $this->html,
             ];
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            if (!is_string($scheme) || strtolower($scheme) !== 'https') {
+                Logger::RecordLog(message: [
+                    'outcome' => 'insecure_endpoint_refused',
+                    'endpoint' => self::logSafeEndpoint($url),
+                ], logFile: __CLASS__);
+
+                return;
+            }
             $ch = curl_init();
+            curl_setopt_array($ch, $this->transportOptions());
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, 0);
             if (! empty($params)) {
@@ -165,7 +178,7 @@ abstract class MailerSender
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 120);
@@ -179,24 +192,32 @@ abstract class MailerSender
             $curl_errno = curl_errno($ch);
             $curl_error = curl_error($ch);
             curl_close($ch);
+            $outcome = 'response_received';
+            $statusValue = null;
             if ($curl_errno > 0) {
+                $outcome = 'transport_error';
                 $response['value'] = 400;
                 $response['error'] = "(err-" . __METHOD__ . ") cURL Error ($curl_errno): $curl_error";
             } else {
                 if ($resultArray = json_decode($result, true)) {
                     $response = $resultArray;
+                    // Only a plain HTTP-style status number is ever logged; the server's own values are not.
+                    $statusValue = isset($response['value']) && is_int($response['value']) && $response['value'] >= 100 && $response['value'] <= 599 ? $response['value'] : null;
                 } else {
+                    $outcome = ($httpCode != 200) ? 'http_error' : 'invalid_response';
                     $response['value'] = 400;
                     $response['error'] = ($httpCode != 200) ? "Error header response " . $httpCode : "There is no response from server (err-" . __METHOD__ . ")";
                     $response['result'] = $result;
                 }
             }
+            // Fixed, pre-defined diagnostics only: never request data, response bodies or server-supplied text.
             Logger::RecordLog(message: [
-                'url' => self::logSafeUrl($url),
+                'outcome' => $outcome,
+                'endpoint' => self::logSafeEndpoint($url),
                 'param_names' => array_keys($params),
                 'http_code' => $httpCode,
-                'value' => isset($response['value']) && is_scalar($response['value']) ? $response['value'] : null,
-                'error' => isset($response['error']) && is_scalar($response['error']) ? self::logSafeText((string)$response['error']) : null,
+                'curl_errno' => $curl_errno,
+                'status' => $statusValue,
             ], logFile: __CLASS__);
         }
     }
