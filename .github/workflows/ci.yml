@@ -74,6 +74,9 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: PHP patch floor
+        run: php scripts/ci/check-php-floor.php
+
       - name: Regression suite against the logger release
         env:
           LOGGER_VERSION: ${{ matrix.logger }}

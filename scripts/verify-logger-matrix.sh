@@ -5,6 +5,12 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Actual interpreter patch floor first, before any Composer work (CI_WORKFLOW_STANDARD §7.1).
+# LOGGER_MATRIX_SKIP_FLOOR=1 is a local rehearsal knob and is never set in CI.
+if [ "${LOGGER_MATRIX_SKIP_FLOOR:-0}" != "1" ]; then
+    php "${root}/scripts/ci/check-php-floor.php"
+fi
 versions=("$@")
 if [ "${#versions[@]}" -eq 0 ]; then
     versions=(5.0.1 5.1.0 5.1.1 5.1.2 7.0.0)
@@ -12,7 +18,7 @@ fi
 
 for version in "${versions[@]}"; do
     work="$(mktemp -d)"
-    cp -R "$root/composer.json" "$root/phpunit.xml" "$root/mailer" "$root/tests" "$work/"
+    cp -R "$root/composer.json" "$root/phpunit.xml" "$root/mailer" "$root/scripts" "$root/tests" "$work/"
     (
         cd "$work"
         composer require --no-interaction --no-progress --quiet "maatify/logger:=${version}" --with-all-dependencies
