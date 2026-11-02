@@ -78,6 +78,10 @@ class Mailer extends MailerSender
 
         $this->receiver_email = $email;
 
+        $this->reply_name = '';
+
+        $this->reply_email = '';
+
         $this->twigLoader($language);
 
         return $this;
@@ -107,28 +111,43 @@ class Mailer extends MailerSender
 
     public function AdminMessage(string $message, string $subject): bool
     {
-        $this->data = ['message' => $message];
+        // Read the settings before touching any state, so a missing setting leaves the object as it was.
+        $siteEmail = self::env('SMTP_FROM_MAIL');
+        $siteName = self::env('SMTP_FROM_NAME');
 
-        $this->subject = $subject;
+        $visitorEmail = $this->receiver_email;
+        $visitorName = $this->receiver_name;
+        $replyEmail = $this->reply_email;
+        $replyName = $this->reply_name;
 
-        $this->reply_name = $this->receiver_name;
-        $this->reply_email = $this->receiver_email;
-        $this->receiver_email = self::env('SMTP_FROM_MAIL');
-        $this->receiver_name = self::env('SMTP_FROM_NAME');
+        try {
+            $this->data = ['message' => $message];
+            $this->subject = $subject;
+            $this->reply_name = $visitorName;
+            $this->reply_email = $visitorEmail;
+            $this->receiver_email = $siteEmail;
+            $this->receiver_name = $siteName;
+            $this->twig_name = 'message_admin';
 
-        $this->twig_name = 'message_admin';
+            if (!$this->Sender()) {
+                return false;
+            }
 
-        if($this->Sender()){
             $this->data = ['message' => 'We have received your message, we will reply ASAP.' . PHP_EOL . PHP_EOL . $message];
             $this->subject = 'RE: ' . $subject;
-            $this->receiver_email = $this->reply_email;
-            $this->receiver_name = $this->reply_name;
-            $this->reply_name = self::env('SMTP_FROM_NAME');
-            $this->reply_email = self::env('SMTP_FROM_MAIL');
+            $this->receiver_email = $visitorEmail;
+            $this->receiver_name = $visitorName;
+            $this->reply_name = $siteName;
+            $this->reply_email = $siteEmail;
             $this->twig_name = 'message';
+
             return $this->Sender();
-        }else{
-            return false;
+        } finally {
+            // The two messages must not leak their recipient or Reply-To into later sends.
+            $this->receiver_email = $visitorEmail;
+            $this->receiver_name = $visitorName;
+            $this->reply_email = $replyEmail;
+            $this->reply_name = $replyName;
         }
     }
 

@@ -75,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Log calls passed the log-file name where `maatify/logger` 5.1 and newer expect the log level, which `maatify/logger` 7 rejects with `InvalidArgumentException`. They now use named arguments, so every supported `maatify/logger` release accepts them and `maatify/logger` 7 can be installed.
 - The acknowledgement that `AdminMessage()` sends to the visitor had its `Reply-To` name and address swapped.
+- `AdminMessage()` left the site as recipient or its `Reply-To` on the `Mailer` object, so a later send from the same object (for example through `Mailer::obj()`) could go to the wrong recipient or carry a wrong `Reply-To`. It now restores the recipient and `Reply-To` on every path, including failures and exceptions, and `reInitiateSender()` clears the `Reply-To`.
 - Failures are now logged with fixed markers and the exception class, code and line only.
 
 ## [5.0.1] - 2025-08-10
