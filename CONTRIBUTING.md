@@ -4,7 +4,7 @@ Thank you for helping improve `maatify/mailer`.
 
 ## Package identity
 
-`maatify/mailer` is a PHP library that renders Twig e-mail templates and sends them through SMTP with PHPMailer. Its public entry point is `Maatify\Mailer\Service\Mailer`.
+`maatify/mailer` is a PHP library that renders Twig e-mail templates and sends them through SMTP with PHPMailer. Its public entry point is `Maatify\Mailer\Service\Mailer`. The canonical contract is [MAILER_PACKAGE_REFERENCE.md](MAILER_PACKAGE_REFERENCE.md); a change to the public API or the documented behavior updates it in the same pull request (a regression test checks that it lists every public member, type, enum case and setting).
 
 ## Package boundaries
 
@@ -60,7 +60,7 @@ actionlint .github/workflows/*.yml
 
 - Every bug fix needs a regression test that fails without the fix, in the suite that fits it: `tests/Regression` for guards and unit-level behavior, `tests/System` when the defect shows through the public API and the SMTP traffic.
 - New observable behavior needs a system-level test through the public API (`tests/System`).
-- Tests never send real mail. They use the local SMTP stand-in in `tests/Support` (implicit TLS, a per-run self-signed certificate); every send runs in its own PHP process. Tests that check logging must assert that a log entry was actually written, and use canary values to prove nothing sensitive is logged.
+- Tests never send real mail. They use the local SMTP stand-in in `tests/Support` (implicit TLS, a per-run self-signed certificate); each SMTP test scenario runs its send in its own PHP process. Tests that check logging must assert that a log entry was actually written, and use canary values to prove nothing sensitive is logged.
 - This library has no database or other repository-controlled service that CI could provision, so there are no Integration suites. The SMTP server is externally controlled in production; it is verified deterministically with the local stand-in, and any live check against a real server is a separate, controlled verification that is never part of baseline CI.
 - PHPStan runs at level `max` with no baseline and no suppressions; fix the underlying type issue instead.
 
