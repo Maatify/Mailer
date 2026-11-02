@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Maatify\Mailer\Mailer;
+use Maatify\Mailer\Service\Mailer;
 
 /**
  * Realistic consumer workflow through the production autoload and the public API: a Host sends a
@@ -28,7 +28,9 @@ $_ENV = array_merge($_ENV, [
 ]);
 $templates = __DIR__ . '/templates/email';
 
-$plain = new Mailer('person@example.test', 'Person', '', $templates);
+// The first mailer relies on the default template location: the project root's templates/email,
+// resolved from the installed package under vendor/.
+$plain = new Mailer('person@example.test', 'Person');
 $visitor = new Mailer('visitor@example.test', 'Visitor Name', '', $templates);
 $refused = new Mailer('reject@example.test', 'Refused', '', $templates);
 

@@ -2,7 +2,7 @@
 
 namespace Maatify\Mailer\Tests\Support;
 
-use Maatify\Mailer\MailerSender;
+use Maatify\Mailer\Adapter\MailerSender;
 
 /** Exposes the protected send path of MailerSender to tests/Support/smtp_runner.php. */
 final class RunnerSender extends MailerSender

@@ -2,6 +2,7 @@
 
 namespace Maatify\Mailer\Tests\System;
 
+use Maatify\Mailer\Tests\Support\SourceFiles;
 use Maatify\Mailer\Tests\Support\CapturesLogs;
 use Maatify\Mailer\Tests\Support\LocalSmtp;
 use PHPUnit\Framework\TestCase;
@@ -75,11 +76,11 @@ final class SmtpTransportTest extends TestCase
 
     public function testThereIsNoPreviewOrExitPathInTheSource(): void
     {
-        foreach (glob(__DIR__ . '/../../mailer/*.php') ?: [] as $file) {
+        foreach (SourceFiles::all() as $file) {
             $source = (string)preg_replace('~//[^\n]*|/\*.*?\*/~s', '', (string)file_get_contents($file));
             $this->assertStringNotContainsString('$_GET', $source, basename($file));
             $this->assertDoesNotMatchRegularExpression('/\b(die|exit)\s*[;(]/', $source, basename($file));
-            $this->assertMatchesRegularExpression('/\$mail->isSMTP\(\)/', (string)file_get_contents(__DIR__ . '/../../mailer/MailerSender.php'));
+            $this->assertMatchesRegularExpression('/\$mail->isSMTP\(\)/', (string)file_get_contents(__DIR__ . '/../../src/Adapter/MailerSender.php'));
         }
     }
 

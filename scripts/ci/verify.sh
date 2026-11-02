@@ -25,7 +25,7 @@ composer dump-autoload --optimize --strict-psr --no-interaction
 
 php scripts/ci/check-php-constraint.php
 
-find mailer tests scripts harness -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
+find src tests scripts harness -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
 
 scripts/ci/check-whitespace.sh
 

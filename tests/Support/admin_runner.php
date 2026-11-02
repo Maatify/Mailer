@@ -4,7 +4,7 @@
 // `sent` or `not-sent`. Templates come from tests/Fixtures/templates.
 // Usage: php admin_runner.php <smtp-port> <visitor-email> <visitor-name>
 
-use Maatify\Mailer\Mailer;
+use Maatify\Mailer\Service\Mailer;
 
 require __DIR__ . '/../../vendor/autoload.php';
 

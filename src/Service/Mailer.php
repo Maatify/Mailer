@@ -5,12 +5,11 @@
  * @Project   Mailer
  * @see https://www.maatify.dev Visit Maatify.dev
  * @link https://github.com/Maatify/Mailer View project on GitHub
- * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer),
- * @link https://github.com/symfony/mailer/ (symfony/mailer),
+ * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer)
  *
  * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
  * @copyright ©2024 Maatify.dev
- * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
+ * @note    This Project extends the library phpmailer/phpmailer
  *
  * This program is distributed in the hope that it will be useful - WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,10 +17,11 @@
  *
  */
 
-namespace Maatify\Mailer;
+namespace Maatify\Mailer\Service;
 
 use Exception;
 use Maatify\Logger\Logger;
+use Maatify\Mailer\Adapter\MailerSender;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -37,7 +37,7 @@ class Mailer extends MailerSender
 
     private static self $instance;
 
-    private string $twig_location = __DIR__ . '/../../../../templates/email';
+    private string $twig_location = __DIR__ . '/../../../../../templates/email';
     private string $language = '';
 
     public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = ''): self
