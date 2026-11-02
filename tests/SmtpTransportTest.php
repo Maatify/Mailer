@@ -128,19 +128,27 @@ final class SmtpTransportTest extends TestCase
         )));
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return list<array<mixed>> */
     private function events(): array
     {
-        $lines = array_filter(explode("\n", (string)file_get_contents(self::$events)));
+        $events = [];
+        foreach (explode("\n", (string)file_get_contents(self::$events)) as $line) {
+            $decoded = $line === '' ? null : json_decode($line, true);
+            if (is_array($decoded)) {
+                $events[] = $decoded;
+            }
+        }
 
-        return array_values(array_map(static fn (string $line): array => json_decode($line, true), $lines));
+        return $events;
     }
 
     private function message(): string
     {
         foreach ($this->events() as $event) {
             if (($event['command'] ?? '') === 'DATA') {
-                return (string)$event['message'];
+                $message = $event['message'] ?? '';
+
+                return is_string($message) ? $message : '';
             }
         }
 
@@ -150,10 +158,16 @@ final class SmtpTransportTest extends TestCase
     private static function freePort(): int
     {
         $socket = stream_socket_server('tcp://127.0.0.1:0');
+        if ($socket === false) {
+            self::fail('Cannot reserve a local port.');
+        }
         $name = stream_socket_get_name($socket, false);
         fclose($socket);
+        if (!is_string($name) || strrpos($name, ':') === false) {
+            self::fail('Cannot read the reserved port.');
+        }
 
-        return (int)substr($name, strrpos($name, ':') + 1);
+        return (int)substr($name, (int)strrpos($name, ':') + 1);
     }
 
     private static function generateCertificate(string $pem): void
@@ -162,13 +176,20 @@ final class SmtpTransportTest extends TestCase
         file_put_contents($config, "[req]\ndistinguished_name=dn\nx509_extensions=v3\nprompt=no\n[dn]\nCN=127.0.0.1\n[v3]\nsubjectAltName=IP:127.0.0.1\nbasicConstraints=CA:TRUE\n");
         $options = ['config' => $config, 'x509_extensions' => 'v3', 'req_extensions' => 'v3', 'private_key_bits' => 2048];
         $key = openssl_pkey_new($options);
-        $csr = $key ? openssl_csr_new(['commonName' => '127.0.0.1'], $key, $options) : false;
-        $cert = $csr ? openssl_csr_sign($csr, null, $key, 1, $options) : false;
-        if ($key === false || $csr === false || $cert === false) {
-            self::fail('Could not generate the test certificate: ' . openssl_error_string());
+        if ($key === false) {
+            self::fail('Could not generate the test key: ' . openssl_error_string());
+        }
+        $requestKey = $key; // openssl_csr_new() takes the key by reference
+        $csr = openssl_csr_new(['commonName' => '127.0.0.1'], $requestKey, $options);
+        if (!$csr instanceof \OpenSSLCertificateSigningRequest) {
+            self::fail('Could not create the test certificate request: ' . openssl_error_string());
+        }
+        $cert = openssl_csr_sign($csr, null, $key, 1, $options);
+        if ($cert === false) {
+            self::fail('Could not sign the test certificate: ' . openssl_error_string());
         }
         openssl_x509_export($cert, $certPem);
         openssl_pkey_export($key, $keyPem, null, $options);
-        file_put_contents($pem, $certPem . $keyPem);
+        file_put_contents($pem, (is_string($certPem) ? $certPem : '') . (is_string($keyPem) ? $keyPem : ''));
     }
 }

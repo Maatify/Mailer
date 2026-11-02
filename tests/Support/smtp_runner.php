@@ -9,8 +9,13 @@ use Maatify\Mailer\Tests\Support\RunnerSender;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-[$script, $port, $recipient, $subject] = $argv;
-if (($argv[4] ?? '') === 'preview') {
+$arguments = $_SERVER['argv'] ?? [];
+if (!is_array($arguments) || count($arguments) < 4) {
+    fwrite(STDERR, "Usage: php smtp_runner.php <smtp-port> <recipient> <subject> [preview]\n");
+    exit(2);
+}
+[$script, $port, $recipient, $subject] = array_map(static fn (mixed $value): string => is_scalar($value) ? (string)$value : '', $arguments);
+if (($arguments[4] ?? '') === 'preview') {
     $_GET['stg'] = '1';
 }
 $_ENV += [

@@ -32,7 +32,7 @@ trait CapturesLogs
                 continue;
             }
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)) as $file) {
-                if ($file->isFile()) {
+                if ($file instanceof \SplFileInfo && $file->isFile()) {
                     $sizes[$file->getPathname()] = $file->getSize();
                 }
             }
