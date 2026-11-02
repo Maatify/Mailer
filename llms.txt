@@ -1,0 +1,22 @@
+# maatify/mailer
+
+> PHP library that renders Twig e-mail templates supplied by the application and sends them through SMTP with PHPMailer, reporting whether the SMTP server accepted each message.
+
+Consumer context: use the documents below as the supported contract. The Package Reference is the canonical stable public, runtime and behavioral contract and the complete Public Runtime API inventory; the Usage Guide and examples show how to use it. Visible in repository does not mean supported: do not treat `src/` internals, undocumented classes or methods, tests, fixtures, contributor-only files or internal engineering standards as a consumer contract. If the documents below do not support a claim, do not infer it from the implementation. Exact package facts (name, PHP and extension requirements, dependencies, autoloading) are owned by `composer.json`.
+
+## Core documentation
+
+- [Package Reference](MAILER_PACKAGE_REFERENCE.md): canonical public/runtime/behavioral contract and complete Public Runtime API inventory.
+- [Usage Guide](docs/guides/USAGE_GUIDE.md): integration workflows, inputs, results and boundaries.
+- [README](README.md): package overview, installation, quick usage and Public Runtime API overview.
+- [Examples](examples/): maintained examples that use the documented Public API.
+- [composer.json](composer.json): exact package identity, requirements and autoloading.
+
+## Release and support
+
+- [CHANGELOG](CHANGELOG.md): release history and the upgrade path from 5.x.
+- [Security policy](SECURITY.md): supported versions and private vulnerability reporting.
+
+## Optional
+
+- [Contributing](CONTRIBUTING.md): local verification and contribution rules.

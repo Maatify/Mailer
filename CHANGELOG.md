@@ -59,6 +59,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `docs/guides/USAGE_GUIDE.md`, a consumer guide with a capability map, walkthroughs and links to the examples; consumer examples in `examples/` (a confirmation code, custom subjects, a contact form) with a working template set, smoke-executed by CI against a local SMTP stand-in; and `llms.txt`, a navigation file for AI consumers.
+- `.gitattributes` keeps development and CI files out of the Composer dist archive; CI inspects the resulting archive and checks that every link in the shipped documents resolves inside it.
 - `MAILER_PACKAGE_REFERENCE.md`, the canonical reference for the public API, configuration, templates, result and failure guarantees, logging and extension point; a regression test keeps it in step with the code.
 - `Maatify\Mailer\Contract\SubjectProviderInterface` and the `Maatify\Mailer\Enum\MailSubjectEnum` enum (with the library's default subject for each message): the explicit way for an application to choose subject lines.
 - Support metadata in `composer.json` (`support.issues`, `support.source`, `support.security`), `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.

@@ -25,13 +25,17 @@ composer dump-autoload --optimize --strict-psr --no-interaction
 
 php scripts/ci/check-php-constraint.php
 
-find src tests scripts harness -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
+find src tests scripts harness examples -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
 
 scripts/ci/check-whitespace.sh
 
 composer analyse
 
 composer test
+
+scripts/ci/smoke-examples.sh
+
+scripts/ci/check-archive.sh
 
 harness/run.sh "${mode}"
 

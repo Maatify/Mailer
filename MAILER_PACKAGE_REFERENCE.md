@@ -4,6 +4,8 @@ Canonical reference for the stable public, runtime and behavioral contract of `m
 
 Composer identity, metadata, requirements, dependencies, autoloading and scripts are owned by [`composer.json`](composer.json) and are not restated here. Changes between releases, including the upgrade path from `5.x`, are recorded in [CHANGELOG.md](CHANGELOG.md).
 
+Usage walkthroughs are in the [Usage Guide](docs/guides/USAGE_GUIDE.md); runnable code is in [`examples/`](examples/).
+
 ## Purpose and boundaries
 
 The library renders Twig e-mail templates that the application provides and sends the result through SMTP with PHPMailer. It builds the message, sends it, reports to the caller whether the SMTP server accepted it, and logs a failure without recipient data, message content or exception text.
