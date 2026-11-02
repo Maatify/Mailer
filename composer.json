@@ -27,7 +27,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Maatify\\Mailer\\": "mailer/"
+      "Maatify\\Mailer\\": "src/"
     }
   },
   "autoload-dev": {

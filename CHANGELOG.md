@@ -14,6 +14,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A missing or non-string configuration setting is now reported with a `RuntimeException` naming the setting, and `SMTP_PORT` must be an integer. Previously the missing value was passed on as `null`. Where the failure surfaces depends on where the setting is read. Settings read before a message is rendered and sent (`SMTP_REPLY_MAIL` in the constructor, `SITE_URL` in the link methods, `SMTP_FROM_MAIL` and `SMTP_FROM_NAME` in `AdminMessage()`) throw to the caller. Settings read while the message is rendered or sent (`EMAIL_SITE_URL`, `EMAIL_SITE_LOGO`, `EMAIL_SITE_NAME` and the `SMTP_*` settings used for the connection) are caught, logged by exception class, code and line, and the send method returns `false`.
 - Dependencies changed: `maatify/logger` is now `^5.0 || ^7.0` (previously `^5`), `phpmailer/phpmailer` is `^6.10`, and `twig/twig` `^3.27` is now a direct requirement, replacing `symfony/twig-bundle`. `ext-curl`, `vlucas/phpdotenv` and `symfony/mailer` are no longer required; applications that relied on them being installed through this package must require them directly. `ext-openssl` is now required.
 
+- The public classes moved to the canonical namespace layout: `Maatify\Mailer\Mailer` is now `Maatify\Mailer\Service\Mailer`, and `Maatify\Mailer\MailerSender` is now `Maatify\Mailer\Adapter\MailerSender`. Class names, method signatures and behavior are unchanged; only `use` statements and `extends` clauses need to change.
+
+### Upgrading from 5.x
+
+1. Run the application on PHP 8.4.27 or newer in 8.4, or 8.5.12 or newer in 8.5, as declared by `require.php`.
+2. Change the version constraint of the library in your project to `^6.0` and update it with its dependencies:
+
+   ```bash
+   composer require 'maatify/mailer:^6.0' --with-all-dependencies
+   ```
+
+   A constraint such as `^5.0` keeps Composer on 5.x, so `composer update` alone does not upgrade. Require directly any package you used through this one and that is no longer a dependency (`vlucas/phpdotenv`, `symfony/mailer`, `ext-curl`).
+3. Update the class references in your code:
+
+   ```php
+   // before (5.x)
+   use Maatify\Mailer\Mailer;
+   // after (6.0.0)
+   use Maatify\Mailer\Service\Mailer;
+   ```
+
+   If you extend the sender base class, import `Maatify\Mailer\Adapter\MailerSender` instead of `Maatify\Mailer\MailerSender`.
+4. Make sure `SMTP_HOST`, `SMTP_PORT` (an integer), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_MAIL` and `SMTP_FROM_NAME` describe a reachable SMTP server with implicit TLS: mail is no longer sent through PHP's `mail()`.
+
 ### Added
 
 - Support metadata in `composer.json` (`support.issues`, `support.source`, `support.security`), `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
@@ -23,6 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - `composer.json` metadata (description, keywords, homepage, authors, configuration and dependency policy) now follows the Maatify Composer package standard, and the `version` field was removed: versions come from Git tags. The listed authors are now the Maatify entity.
+
+- The PHP sources moved from `mailer/` to `src/Service/` and `src/Adapter/`, and `composer.json` maps `Maatify\Mailer\` to `src/`. The default template directory is unchanged: `templates/email` in the project root, resolved from the installed package. Log file names that `Mailer` and `MailerSender` derive from their class name follow the new class names.
 
 ### Fixed
 

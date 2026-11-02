@@ -2,6 +2,7 @@
 
 namespace Maatify\Mailer\Tests\Regression;
 
+use Maatify\Mailer\Tests\Support\SourceFiles;
 use Maatify\Logger\Logger;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +25,7 @@ final class LoggerLevelTest extends TestCase
     public function testNoRecordLogCallPassesAPositionalSecondArgumentOrALiteralNonPsr3Level(): void
     {
         $calls = 0;
-        foreach (glob(__DIR__ . '/../../mailer/*.php') ?: [] as $file) {
+        foreach (SourceFiles::all() as $file) {
             $found = 0;
             $this->assertSame([], self::violations((string)file_get_contents($file), $found), basename($file));
             $calls += $found;
@@ -49,7 +50,7 @@ final class LoggerLevelTest extends TestCase
     public function testTheLibrariesCallShapeWorksWithTheInstalledLogger(): void
     {
         Logger::RecordLog(message: new \Exception('logger compatibility check'), logFile: 'Maatify\\Mailer\\Mailer');
-        Logger::RecordLog(message: [['value' => 400], 'https://example.test', ['subject' => 'x']], logFile: 'Maatify\\Mailer\\MailerSender');
+        Logger::RecordLog(message: [['value' => 400], 'https://example.test', ['subject' => 'x']], logFile: 'Maatify\\Mailer\\Adapter\\MailerSender');
         $this->addToAssertionCount(1);
     }
 

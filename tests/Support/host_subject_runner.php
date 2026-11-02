@@ -4,8 +4,8 @@
 // subject the library selected. SMTP points at a closed port, so nothing is delivered.
 // Usage: php host_subject_runner.php <none|bare|no-method|no-obj|host|host-case|empty>
 
-use Maatify\Mailer\Mailer;
-use Maatify\Mailer\MailerSender;
+use Maatify\Mailer\Service\Mailer;
+use Maatify\Mailer\Adapter\MailerSender;
 
 require __DIR__ . '/../../vendor/autoload.php';
 

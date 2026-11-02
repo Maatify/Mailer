@@ -1,6 +1,6 @@
 parameters:
     level: max
     paths:
-        - mailer
+        - src
         - tests
         - scripts

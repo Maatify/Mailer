@@ -4,7 +4,7 @@ Thank you for helping improve `maatify/mailer`.
 
 ## Package identity
 
-`maatify/mailer` is a PHP library that renders Twig e-mail templates and sends them through SMTP with PHPMailer. Its public entry point is `Maatify\Mailer\Mailer`.
+`maatify/mailer` is a PHP library that renders Twig e-mail templates and sends them through SMTP with PHPMailer. Its public entry point is `Maatify\Mailer\Service\Mailer`.
 
 ## Package boundaries
 

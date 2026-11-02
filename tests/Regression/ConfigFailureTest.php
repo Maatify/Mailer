@@ -2,7 +2,7 @@
 
 namespace Maatify\Mailer\Tests\Regression;
 
-use Maatify\Mailer\Mailer;
+use Maatify\Mailer\Service\Mailer;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
