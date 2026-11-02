@@ -18,7 +18,7 @@ fi
 
 for version in "${versions[@]}"; do
     work="$(mktemp -d)"
-    cp -R "$root/composer.json" "$root/phpunit.xml" "$root/src" "$root/scripts" "$root/tests" "$work/"
+    cp -R "$root/composer.json" "$root/phpunit.xml" "$root/MAILER_PACKAGE_REFERENCE.md" "$root/src" "$root/scripts" "$root/tests" "$work/"
     (
         cd "$work"
         composer require --no-interaction --no-progress --quiet "maatify/logger:=${version}" --with-all-dependencies
