@@ -1,6 +1,6 @@
 <?php
 
-namespace Maatify\Mailer\Tests;
+namespace Maatify\Mailer\Tests\Regression;
 
 use PHPUnit\Framework\TestCase;
 
@@ -52,7 +52,7 @@ final class HostSubjectTest extends TestCase
         return trim((string)shell_exec(sprintf(
             '%s -d display_errors=0 %s %s 2>/dev/null',
             escapeshellarg(PHP_BINARY),
-            escapeshellarg(__DIR__ . '/Support/host_subject_runner.php'),
+            escapeshellarg(__DIR__ . '/../Support/host_subject_runner.php'),
             escapeshellarg($mode)
         )));
     }

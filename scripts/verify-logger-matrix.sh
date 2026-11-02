@@ -23,7 +23,7 @@ for version in "${versions[@]}"; do
         cd "$work"
         composer require --no-interaction --no-progress --quiet "maatify/logger:=${version}" --with-all-dependencies
         echo "== maatify/logger ${version} (PHP $(php -r 'echo PHP_VERSION;'))"
-        vendor/bin/phpunit --testsuite regression
+        vendor/bin/phpunit
     )
     rm -rf "$work"
 done
