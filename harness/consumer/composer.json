@@ -1,0 +1,24 @@
+{
+  "name": "maatify/mailer-consumer-harness",
+  "description": "Clean external consumer used to verify maatify/mailer through Composer.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "maatify/mailer": "*@dev"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "__PACKAGE_DIR__",
+      "options": {
+        "symlink": false,
+        "versions": {
+          "maatify/mailer": "6.0.0"
+        }
+      }
+    }
+  ],
+  "config": {
+    "sort-packages": true
+  }
+}

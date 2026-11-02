@@ -34,11 +34,11 @@ mkdir($templates);
 foreach (['__header.html.twig', 'confirm.html.twig', '__footer.html.twig', 'confirm.text.twig'] as $name) {
     file_put_contents($templates . '/' . $name, 'body ' . $name);
 }
-$_ENV += [
+$_ENV = array_merge($_ENV, [
     'EMAIL_SITE_URL' => 'https://site.example/', 'EMAIL_SITE_LOGO' => 'logo.png', 'EMAIL_SITE_NAME' => 'site',
     'SMTP_HOST' => '127.0.0.1', 'SMTP_PORT' => '1', 'SMTP_USER' => 'user', 'SMTP_PASS' => 'password',
     'SMTP_FROM_MAIL' => 'from@example.test', 'SMTP_FROM_NAME' => 'Sender', 'SMTP_REPLY_MAIL' => 'reply@example.test',
-];
+]);
 
 $mailer = new Mailer('person@example.test', 'Person', '', $templates);
 $mailer->ConfirmCode('123456');

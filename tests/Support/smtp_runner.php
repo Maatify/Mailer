@@ -18,9 +18,9 @@ if (!is_array($arguments) || count($arguments) < 4) {
 if (($arguments[4] ?? '') === 'preview') {
     $_GET['stg'] = '1';
 }
-$_ENV += [
+$_ENV = array_merge($_ENV, [
     'SMTP_HOST' => '127.0.0.1', 'SMTP_PORT' => $port, 'SMTP_USER' => 'user', 'SMTP_PASS' => 'password',
     'SMTP_FROM_MAIL' => 'from@example.test', 'SMTP_FROM_NAME' => 'Sender',
-];
+]);
 
 echo (new RunnerSender($recipient, $subject))->send() ? 'sent' : 'not-sent';

@@ -8,6 +8,8 @@ namespace Maatify\Mailer\Tests\Support;
  */
 trait LocalSmtp
 {
+    private const INHERITED_SMTP_SETTINGS = 'SMTP_HOST=127.0.0.1 SMTP_PORT=1 SMTP_USER=inherited SMTP_PASS=inherited SMTP_FROM_MAIL=inherited@example.invalid SMTP_FROM_NAME=Inherited';
+
     private static int $pid = 0;
     private static int $port = 0;
     private static string $dir = '';
@@ -56,11 +58,16 @@ trait LocalSmtp
         file_put_contents(self::$events, '');
     }
 
-    /** Runs a tests/Support runner script in its own PHP process and returns its trimmed output. */
+    /**
+     * Runs a tests/Support runner script in its own PHP process and returns its trimmed output.
+     * The process inherits deliberately wrong SMTP settings, exposed through $_ENV, which the
+     * runner's own settings must replace: a runner never depends on the host environment.
+     */
     private function runSupportScript(string $script, string ...$arguments): string
     {
         return trim((string)shell_exec(sprintf(
-            '%s -d display_errors=0 -d openssl.cafile=%s %s %s 2>/dev/null',
+            '%s %s -d display_errors=0 -d variables_order=EGPCS -d openssl.cafile=%s %s %s 2>/dev/null',
+            self::INHERITED_SMTP_SETTINGS,
             escapeshellarg(PHP_BINARY),
             escapeshellarg(self::$pem),
             escapeshellarg(__DIR__ . '/' . $script),

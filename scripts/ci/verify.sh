@@ -25,12 +25,14 @@ composer dump-autoload --optimize --strict-psr --no-interaction
 
 php scripts/ci/check-php-constraint.php
 
-find mailer tests scripts -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
+find mailer tests scripts harness -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
 
 scripts/ci/check-whitespace.sh
 
 composer analyse
 
 composer test
+
+harness/run.sh "${mode}"
 
 composer audit --no-interaction --abandoned=fail
