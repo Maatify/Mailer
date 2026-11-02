@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Maatify\Mailer\Contract\SubjectProviderInterface;
-use Maatify\Mailer\Enum\MailSubject;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use Maatify\Mailer\Service\Mailer;
 
 /**
@@ -37,9 +37,9 @@ $visitor = new Mailer('visitor@example.test', 'Visitor Name', '', $templates);
 $refused = new Mailer('reject@example.test', 'Refused', '', $templates);
 // The application chooses subjects through the injected contract, not through a host class.
 $coded = new Mailer('coder@example.test', 'Coder', '', $templates, new class implements SubjectProviderInterface {
-    public function subject(MailSubject $message, string $language): ?string
+    public function subject(MailSubjectEnum $message, string $language): ?string
     {
-        return $message === MailSubject::ConfirmCode ? 'CONSUMER-CODE-SUBJECT' : null;
+        return $message === MailSubjectEnum::ConfirmCode ? 'CONSUMER-CODE-SUBJECT' : null;
     }
 });
 

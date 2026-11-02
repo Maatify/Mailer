@@ -40,14 +40,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
    ```php
    use Maatify\Mailer\Contract\SubjectProviderInterface;
-   use Maatify\Mailer\Enum\MailSubject;
+   use Maatify\Mailer\Enum\MailSubjectEnum;
 
    final class AppSubjects implements SubjectProviderInterface
    {
-       public function subject(MailSubject $message, string $language): ?string
+       public function subject(MailSubjectEnum $message, string $language): ?string
        {
            return match ($message) {
-               MailSubject::ConfirmCode => $language === 'ar' ? 'رمز التحقق' : 'Confirm Code',
+               MailSubjectEnum::ConfirmCode => $language === 'ar' ? 'رمز التحقق' : 'Confirm Code',
                default => null, // null or '' keeps the library default
            };
        }
@@ -59,7 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `Maatify\Mailer\Contract\SubjectProviderInterface` and the `Maatify\Mailer\Enum\MailSubject` enum (with the library's default subject for each message): the explicit way for an application to choose subject lines.
+- `Maatify\Mailer\Contract\SubjectProviderInterface` and the `Maatify\Mailer\Enum\MailSubjectEnum` enum (with the library's default subject for each message): the explicit way for an application to choose subject lines.
 - Support metadata in `composer.json` (`support.issues`, `support.source`, `support.security`), `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 - PHPStan at level `max` with no baseline and no suppressions, regression and system test suites, a logger compatibility check against `maatify/logger` 5.0.1, 5.1.x and 7.0, and a Consumer Verification Harness that installs the package from the committed tree into a clean Composer consumer and sends mail through a local SMTP stand-in.
 - A CI workflow with a stable `CI gate` check, a pinned workflow lint, and a repository-owned verification gate (`scripts/ci/verify.sh`) that runs for the latest and the lowest supported dependencies.

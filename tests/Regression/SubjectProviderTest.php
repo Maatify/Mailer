@@ -2,7 +2,7 @@
 
 namespace Maatify\Mailer\Tests\Regression;
 
-use Maatify\Mailer\Enum\MailSubject;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,7 +30,7 @@ final class SubjectProviderTest extends TestCase
     public function testTheDefaultsAreTheOnesTheEnumOwns(): void
     {
         $owned = [];
-        foreach (MailSubject::cases() as $case) {
+        foreach (MailSubjectEnum::cases() as $case) {
             $owned[$case->value] = $case->defaultSubject();
         }
         $this->assertSame(self::DEFAULTS, $owned);

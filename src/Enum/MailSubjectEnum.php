@@ -6,7 +6,7 @@ namespace Maatify\Mailer\Enum;
  * The messages whose subject line the library chooses, with the default subject the library owns
  * for each. An application changes a subject through a SubjectProviderInterface.
  */
-enum MailSubject: string
+enum MailSubjectEnum: string
 {
     case ConfirmCode = 'confirm_code';
     case ConfirmMail = 'confirm_mail';

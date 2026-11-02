@@ -2,7 +2,7 @@
 
 namespace Maatify\Mailer\Contract;
 
-use Maatify\Mailer\Enum\MailSubject;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 
 /**
  * Lets an application choose the subject line of the messages whose subject the library selects.
@@ -16,5 +16,5 @@ interface SubjectProviderInterface
      *                         when it uses the default template directory.
      * @return string|null The subject, or null (or an empty string) to use the library's default.
      */
-    public function subject(MailSubject $message, string $language): ?string;
+    public function subject(MailSubjectEnum $message, string $language): ?string;
 }

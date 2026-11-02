@@ -3,7 +3,7 @@
 namespace Maatify\Mailer\Tests\Support;
 
 use Maatify\Mailer\Contract\SubjectProviderInterface;
-use Maatify\Mailer\Enum\MailSubject;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 
 /** A subject provider that records every request; `partial` mode answers only for some messages. */
 final class RecordingSubjectProvider implements SubjectProviderInterface
@@ -15,13 +15,13 @@ final class RecordingSubjectProvider implements SubjectProviderInterface
     {
     }
 
-    public function subject(MailSubject $message, string $language): ?string
+    public function subject(MailSubjectEnum $message, string $language): ?string
     {
         $this->calls[] = [$message->value, $language];
         if ($this->partial) {
             return match ($message) {
-                MailSubject::ConfirmCode => 'CUSTOM CODE',
-                MailSubject::ResetPassword => '',
+                MailSubjectEnum::ConfirmCode => 'CUSTOM CODE',
+                MailSubjectEnum::ResetPassword => '',
                 default => null,
             };
         }

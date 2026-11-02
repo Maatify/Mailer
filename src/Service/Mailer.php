@@ -23,7 +23,7 @@ use Exception;
 use Maatify\Logger\Logger;
 use Maatify\Mailer\Adapter\MailerSender;
 use Maatify\Mailer\Contract\SubjectProviderInterface;
-use Maatify\Mailer\Enum\MailSubject;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -87,7 +87,7 @@ class Mailer extends MailerSender
     private array $data = [];
     private string $twig_name;
 
-    private function subjectFor(MailSubject $message): string
+    private function subjectFor(MailSubjectEnum $message): string
     {
         $subject = $this->subjects?->subject($message, $this->language);
 
@@ -98,7 +98,7 @@ class Mailer extends MailerSender
     {
         $this->data = ['code' => $code];
 
-        $this->subject = $this->subjectFor(MailSubject::ConfirmCode);
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmCode);
 
         $this->twig_name = 'confirm';
 
@@ -166,7 +166,7 @@ class Mailer extends MailerSender
         $this->twig_name = 'confirm_link';
         $this->data = ['code' => $url];
 
-        $this->subject = $this->subjectFor(MailSubject::ConfirmMail);
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmMail);
 
         return $this->Sender();
     }
@@ -177,7 +177,7 @@ class Mailer extends MailerSender
         $this->data = ['code' => self::env('SITE_URL') . '/dashboard/forget-password/' . $code,
                        'image' => self::env('SITE_URL') . '/images/letter.png'];
 
-        $this->subject = $this->subjectFor(MailSubject::ResetPassword);
+        $this->subject = $this->subjectFor(MailSubjectEnum::ResetPassword);
 
         return $this->Sender();
     }
@@ -186,7 +186,7 @@ class Mailer extends MailerSender
     {
         $this->data = ['code' => $password];
 
-        $this->subject = $this->subjectFor(MailSubject::TemporaryPassword);
+        $this->subject = $this->subjectFor(MailSubjectEnum::TemporaryPassword);
 
         $this->twig_name = 'temp_pass';
 
