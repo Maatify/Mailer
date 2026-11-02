@@ -1,0 +1,12 @@
+# Keep development, CI and verification files out of the Composer dist archive.
+# The consumer-facing files stay in it: src/, composer.json, LICENSE, README.md,
+# CHANGELOG.md, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, llms.txt,
+# the Package Reference, docs/guides/ and examples/.
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/.github        export-ignore
+/harness        export-ignore
+/scripts        export-ignore
+/tests          export-ignore
+/phpstan.neon   export-ignore
+/phpunit.xml    export-ignore
