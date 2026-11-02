@@ -8,7 +8,7 @@ namespace Maatify\Mailer\Tests\Support;
  */
 trait LocalSmtp
 {
-    private const INHERITED_SMTP_SETTINGS = 'SMTP_HOST=203.0.113.1 SMTP_PORT=1 SMTP_USER=inherited SMTP_PASS=inherited SMTP_FROM_MAIL=inherited@example.invalid SMTP_FROM_NAME=Inherited';
+    private const INHERITED_SMTP_SETTINGS = 'SMTP_HOST=127.0.0.1 SMTP_PORT=1 SMTP_USER=inherited SMTP_PASS=inherited SMTP_FROM_MAIL=inherited@example.invalid SMTP_FROM_NAME=Inherited';
 
     private static int $pid = 0;
     private static int $port = 0;
