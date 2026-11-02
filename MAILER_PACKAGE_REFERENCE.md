@@ -54,7 +54,7 @@ Application settings ($_ENV) + templates → Mailer → rendered message → SMT
 |---|---|
 | `__construct(string $email = '', string $name = '', string $language = '', string $twig_location = '', ?SubjectProviderInterface $subjects = null)` | Creates a mailer for one recipient. An empty `$email` uses `SMTP_REPLY_MAIL`; an empty `$name` uses the address. A non-empty `$twig_location` replaces the default template directory. `$language` selects a language subdirectory, see [Templates](#templates). `$subjects` customizes subject lines, see [Subject lines](#subject-lines). Throws `RuntimeException` when `SMTP_REPLY_MAIL` is needed and missing, and `Twig\Error\LoaderError` when the template directory does not exist. |
 | `static obj(string $email = '', string $name = '', string $language = '', string $twig_location = '', ?SubjectProviderInterface $subjects = null): self` | Returns the shared instance. The arguments of the first call, the provider included, create it; later calls return the same instance and ignore their arguments. Use `reInitiateSender()` to change the recipient. |
-| `reInitiateSender(string $email = '', string $name = '', string $language = ''): self` | Replaces the recipient and re-evaluates the language directory; returns the same instance. It does not change the provider. Unlike the constructor, it takes the address and name as given: an empty `$email` is not replaced by `SMTP_REPLY_MAIL`. |
+| `reInitiateSender(string $email = '', string $name = '', string $language = ''): self` | Replaces the recipient and re-evaluates the language directory; returns the same instance. It does not change the provider or the `Reply-To`, see [State and reuse](#state-and-reuse). Unlike the constructor, it takes the address and name as given: an empty `$email` is not replaced by `SMTP_REPLY_MAIL`. |
 | `twigLoader(string $language): void` | Selects the template directory for a language, see [Templates](#templates). Called by the constructor and by `reInitiateSender()`. |
 | `ConfirmCode(string $code): bool` | Sends the `confirm` message with the code. |
 | `ConfirmUserLink(string $code): bool` | Sends the `confirm_link` message with the URL `SITE_URL/portal/confirm_mail.php?token=<code>`. |
@@ -83,6 +83,20 @@ Codes, tokens and passwords are inserted into URLs and templates as given; the c
 | `TemporaryPassword` | `temporary_password` | `Your Temporary Password` | `TempPassword()` |
 
 `defaultSubject(): string` returns the default subject of a case. `Message()` and `AdminMessage()` take their subject from the caller.
+
+## Subject lines
+
+The library chooses the subject of four messages (the `MailSubjectEnum` cases above). For each, it asks the provider passed to the constructor; a `null` or empty answer, or no provider at all, gives the library default. `Message()` and `AdminMessage()` use the subject the caller passes. The provider is consulted on every send, before rendering, so an exception it throws reaches the caller. With `Mailer::obj()` the provider of the first call stays for the life of the shared instance.
+
+## State and reuse
+
+A `Mailer` object keeps its recipient (address and name) and its `Reply-To` between calls; each send method sets only the template, data and subject of its own message. `AdminMessage()` also changes the recipient and the `Reply-To`:
+
+- after a successful `AdminMessage()`, the recipient is again the visitor, but the `Reply-To` is now the site (`SMTP_FROM_MAIL`, `SMTP_FROM_NAME`), and a later send from the same object carries it;
+- after an `AdminMessage()` whose first message failed, the recipient is the site and the `Reply-To` is the visitor, so a later send from the same object goes to the site;
+- `reInitiateSender()` replaces the recipient but never clears the `Reply-To`.
+
+Create a new `Mailer` for each recipient and each message flow, and do not reuse an object after `AdminMessage()` or share one through `Mailer::obj()` across different recipients. This behavior is covered by `tests/System/MailerReuseTest.php`; it is a known limitation of the 6.0.0 contract, not a guarantee to build on.
 
 ## Configuration
 
@@ -119,7 +133,7 @@ Common variables for every template: `name` and `email` (the recipient), `site_u
 ## Message and transport contract
 
 - Transport: PHPMailer in SMTP mode, SMTP authentication enabled, implicit TLS (`SMTPS`) on `SMTP_PORT`. The library does not change PHPMailer's TLS verification options.
-- Sender: `SMTP_FROM_MAIL` and `SMTP_FROM_NAME`. Recipient: the mailer's address, with the name or the address as display name. `Reply-To` is set only by `AdminMessage()`.
+- Sender: `SMTP_FROM_MAIL` and `SMTP_FROM_NAME`. Recipient: the mailer's address, with the name or the address as display name. `Reply-To` is set by `AdminMessage()` and then stays on that object, see [State and reuse](#state-and-reuse).
 - Content: UTF-8, an HTML body (header, message and footer templates) and a plain-text alternative body. No attachments, CC or BCC.
 - One message per send method call, except `AdminMessage()`.
 

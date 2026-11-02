@@ -66,6 +66,22 @@ final class PackageReferenceTest extends TestCase
         }
     }
 
+    public function testEveryInternalLinkPointsToAHeading(): void
+    {
+        preg_match_all('/^#{1,6}\s+(.+)$/m', $this->reference, $headings);
+        $anchors = array_map(
+            static fn (string $heading): string => trim((string)preg_replace('/[^a-z0-9 -]/', '', strtolower(str_replace('`', '', $heading)))) === ''
+                ? ''
+                : str_replace(' ', '-', trim((string)preg_replace('/[^a-z0-9 -]/', '', strtolower(str_replace('`', '', $heading))))),
+            $headings[1]
+        );
+        preg_match_all('/\]\(#([^)]+)\)/', $this->reference, $links);
+        $this->assertNotEmpty($links[1], 'The reference has no internal links; the check would be vacuous.');
+        foreach (array_unique($links[1]) as $anchor) {
+            $this->assertContains($anchor, $anchors, 'Broken internal link: #' . $anchor);
+        }
+    }
+
     public function testTheReferenceDeclaresExactlyOneSourceTopology(): void
     {
         $this->assertSame(1, preg_match_all('/^Source Topology: /m', $this->reference));
