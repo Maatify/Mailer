@@ -112,7 +112,9 @@ for run in 1 2; do
             "admin message and acknowledgement sent" => $r["results"]["admin_message"] === true,
             "refused recipient reported as not sent" => $r["results"]["refused_recipient"] === false,
             "SMTP authentication was used" => in_array("AUTH", $commands, true),
-            "three messages reached the server" => count($messages) === 3,
+            "confirm code sent with the provider subject" => $r["results"]["confirm_code"] === true
+                && $has(3, "/^Subject: CONSUMER-CODE-SUBJECT\r?$/m") && str_contains($messages[3] ?? "", "CONSUMER-CODE"),
+            "four messages reached the server" => count($messages) === 4,
             "message content and subject delivered" => $has(0, "/^Subject: CONSUMER-SUBJECT\r?$/m")
                 && $has(0, "/^To: Person <person@example\.test>\r?$/m") && str_contains($messages[0] ?? "", "CONSUMER-BODY"),
             "admin message reaches the site with the visitor as Reply-To" => $has(1, "/^To: Site Office <office@example\.test>\r?$/m")
