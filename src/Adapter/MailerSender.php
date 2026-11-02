@@ -34,8 +34,8 @@ abstract class MailerSender
 
     protected string $receiver_name;
     protected string $receiver_email;
-    protected string $reply_email;
-    protected string $reply_name;
+    protected string $reply_email = '';
+    protected string $reply_name = '';
     protected string $subject;
     /**
      * A configuration setting read from the environment. The library's settings are a documented
