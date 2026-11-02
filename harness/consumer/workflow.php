@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Maatify\Mailer\Contract\SubjectProviderInterface;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use Maatify\Mailer\Service\Mailer;
 
 /**
@@ -33,11 +35,19 @@ $templates = __DIR__ . '/templates/email';
 $plain = new Mailer('person@example.test', 'Person');
 $visitor = new Mailer('visitor@example.test', 'Visitor Name', '', $templates);
 $refused = new Mailer('reject@example.test', 'Refused', '', $templates);
+// The application chooses subjects through the injected contract, not through a host class.
+$coded = new Mailer('coder@example.test', 'Coder', '', $templates, new class implements SubjectProviderInterface {
+    public function subject(MailSubjectEnum $message, string $language): ?string
+    {
+        return $message === MailSubjectEnum::ConfirmCode ? 'CONSUMER-CODE-SUBJECT' : null;
+    }
+});
 
 $results = [
     'message' => $plain->Message('CONSUMER-BODY', 'CONSUMER-SUBJECT'),
     'admin_message' => $visitor->AdminMessage('CONSUMER-VISITOR-BODY', 'CONSUMER-VISITOR-SUBJECT'),
     'refused_recipient' => $refused->Message('CONSUMER-REFUSED-BODY', 'CONSUMER-REFUSED-SUBJECT'),
+    'confirm_code' => $coded->ConfirmCode('CONSUMER-CODE'),
 ];
 
 $packageFile = (string)(new ReflectionClass(Mailer::class))->getFileName();

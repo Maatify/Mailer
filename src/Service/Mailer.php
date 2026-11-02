@@ -22,6 +22,8 @@ namespace Maatify\Mailer\Service;
 use Exception;
 use Maatify\Logger\Logger;
 use Maatify\Mailer\Adapter\MailerSender;
+use Maatify\Mailer\Contract\SubjectProviderInterface;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -40,16 +42,16 @@ class Mailer extends MailerSender
     private string $twig_location = __DIR__ . '/../../../../../templates/email';
     private string $language = '';
 
-    public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = ''): self
+    public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = '', ?SubjectProviderInterface $subjects = null): self
     {
         if(empty(self::$instance))
         {
-            self::$instance = new self($email, $name, $language, $twig_location);
+            self::$instance = new self($email, $name, $language, $twig_location, $subjects);
         }
         return self::$instance;
     }
 
-    public function __construct(string $email = '', string $name = '', string $language = '', string $twig_location = '')
+    public function __construct(string $email = '', string $name = '', string $language = '', string $twig_location = '', private readonly ?SubjectProviderInterface $subjects = null)
     {
         if(empty($email)){
             $email = self::env('SMTP_REPLY_MAIL');
@@ -85,37 +87,18 @@ class Mailer extends MailerSender
     private array $data = [];
     private string $twig_name;
 
-    /**
-     * The subject the host application configures for a message, when it provides
-     * App\Assist\Config\MailerConfig with that method; null otherwise.
-     */
-    private function hostSubject(string $method): ?string
+    private function subjectFor(MailSubjectEnum $message): string
     {
-        $class = 'App\Assist\Config\MailerConfig';
-        // Only a host class that provides both obj() and the requested subject method is used,
-        // exactly as before: otherwise the library's own default subject applies.
-        if (!class_exists($class)) {
-            return null;
-        }
-        // PHP method names are case-insensitive, as with the method_exists() check this replaces.
-        $methods = array_map('strtolower', get_class_methods($class));
-        if (!in_array('obj', $methods, true) || !in_array(strtolower($method), $methods, true)) {
-            return null;
-        }
-        $config = $class::obj();
-        if (!is_object($config) || !is_callable([$config, $method])) {
-            return null;
-        }
-        $subject = $config->$method();
+        $subject = $this->subjects?->subject($message, $this->language);
 
-        return is_string($subject) && $subject !== '' ? $subject : null;
+        return $subject !== null && $subject !== '' ? $subject : $message->defaultSubject();
     }
 
     public function ConfirmCode(string $code): bool
     {
         $this->data = ['code' => $code];
 
-        $this->subject = $this->hostSubject('subjectConfirmCode') ?? 'Confirm Code';
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmCode);
 
         $this->twig_name = 'confirm';
 
@@ -183,7 +166,7 @@ class Mailer extends MailerSender
         $this->twig_name = 'confirm_link';
         $this->data = ['code' => $url];
 
-        $this->subject = $this->hostSubject('subjectConfirmMail') ?? 'Confirm Mail';
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmMail);
 
         return $this->Sender();
     }
@@ -194,7 +177,7 @@ class Mailer extends MailerSender
         $this->data = ['code' => self::env('SITE_URL') . '/dashboard/forget-password/' . $code,
                        'image' => self::env('SITE_URL') . '/images/letter.png'];
 
-        $this->subject = $this->hostSubject('subjectResetPass') ?? 'Reset Password';
+        $this->subject = $this->subjectFor(MailSubjectEnum::ResetPassword);
 
         return $this->Sender();
     }
@@ -203,7 +186,7 @@ class Mailer extends MailerSender
     {
         $this->data = ['code' => $password];
 
-        $this->subject = $this->hostSubject('subjectTempPass') ?? 'Your Temporary Password';
+        $this->subject = $this->subjectFor(MailSubjectEnum::TemporaryPassword);
 
         $this->twig_name = 'temp_pass';
 
@@ -250,10 +233,6 @@ class Mailer extends MailerSender
             $this->language = $language;
 
             $twig_location_lang = $this->twig_location . '/' . $this->language;
-            $hostConfig = 'App\Assist\Config\MailerConfig';
-            if (class_exists($hostConfig)) {
-                $hostConfig::obj($this->language);
-            }
             $loader = new FilesystemLoader($twig_location_lang);
 
             $this->twig = new Environment($loader);
