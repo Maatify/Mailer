@@ -82,7 +82,11 @@ for run in 1 2; do
         (cd "${consumer}" && composer check-platform-reqs) || fail "platform requirements are not satisfied"
     fi
 
-    output="$(cd "${consumer}" && php -d "openssl.cafile=${pem}" workflow.php "${port}")" \
+    # The workflow runs with deliberately wrong SMTP settings inherited through $_ENV: its own
+    # settings must replace them, so the result never depends on the host environment.
+    output="$(cd "${consumer}" && env SMTP_HOST=203.0.113.1 SMTP_PORT=1 SMTP_USER=inherited SMTP_PASS=inherited \
+        SMTP_FROM_MAIL=inherited@example.invalid SMTP_FROM_NAME=Inherited \
+        php -d variables_order=EGPCS -d "openssl.cafile=${pem}" workflow.php "${port}")" \
         || fail "the consumer workflow did not run"
     echo "${output}"
     stop_server

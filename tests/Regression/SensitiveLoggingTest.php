@@ -36,7 +36,7 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testATemplateFailureLogsOnlyTheExceptionClassCodeAndLine(): void
     {
-        $_ENV += ['EMAIL_SITE_URL' => 'https://site.example/', 'EMAIL_SITE_LOGO' => 'logo.png', 'EMAIL_SITE_NAME' => 'site', 'SITE_URL' => 'https://site.example'];
+        $_ENV = array_merge($_ENV, ['EMAIL_SITE_URL' => 'https://site.example/', 'EMAIL_SITE_LOGO' => 'logo.png', 'EMAIL_SITE_NAME' => 'site', 'SITE_URL' => 'https://site.example']);
         $mailer = new Mailer('CANARY-USER@canary.example', 'CANARY-NAME', '', $this->templates);
 
         $this->assertFalse($mailer->ConfirmCode('CANARY-OTP-482913'));

@@ -20,11 +20,12 @@ if (!is_string($port) || $port === '') {
     exit(2);
 }
 
-$_ENV += [
+// The harness settings always replace anything the host environment already defines.
+$_ENV = array_merge($_ENV, [
     'SMTP_HOST' => '127.0.0.1', 'SMTP_PORT' => $port, 'SMTP_USER' => 'consumer', 'SMTP_PASS' => 'consumer-password',
     'SMTP_FROM_MAIL' => 'office@example.test', 'SMTP_FROM_NAME' => 'Site Office',
     'EMAIL_SITE_URL' => 'https://site.example/', 'EMAIL_SITE_LOGO' => 'logo.png', 'EMAIL_SITE_NAME' => 'site',
-];
+]);
 $templates = __DIR__ . '/templates/email';
 
 $plain = new Mailer('person@example.test', 'Person', '', $templates);
