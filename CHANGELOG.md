@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The package now declares `php` as `>=8.4.27 <8.5.0 || >=8.5.12 <8.6.0`. Earlier releases declared no PHP constraint. Applications on an older PHP version, or on a PHP patch version below the security floors of 8.4 and 8.5, can no longer install this version.
 - Every message is sent through SMTP with PHPMailer (implicit TLS). The `SMTP_*` settings were already read in 5.x, but PHPMailer's SMTP mode was not enabled, so they did not select the transport. The host-name based staging relay (`StgMail`, an HTTP request to a separate service) and the `?stg` preview switch were removed; there is no longer a transport other than SMTP.
 - The send methods of `Maatify\Mailer\Mailer` now return `false` when the SMTP server does not accept the message, and `true` only when it did. In 5.x they returned `true` whenever no exception was thrown.
-- A missing or non-string configuration setting now throws a `RuntimeException` naming the setting, and `SMTP_PORT` must be an integer. Previously the missing value was passed on as `null`.
+- A missing or non-string configuration setting is now reported with a `RuntimeException` naming the setting, and `SMTP_PORT` must be an integer. Previously the missing value was passed on as `null`. Where the failure surfaces depends on where the setting is read. Settings read before a message is rendered and sent (`SMTP_REPLY_MAIL` in the constructor, `SITE_URL` in the link methods, `SMTP_FROM_MAIL` and `SMTP_FROM_NAME` in `AdminMessage()`) throw to the caller. Settings read while the message is rendered or sent (`EMAIL_SITE_URL`, `EMAIL_SITE_LOGO`, `EMAIL_SITE_NAME` and the `SMTP_*` settings used for the connection) are caught, logged by exception class, code and line, and the send method returns `false`.
 - Dependencies changed: `maatify/logger` is now `^5.0 || ^7.0` (previously `^5`), `phpmailer/phpmailer` is `^6.10`, and `twig/twig` `^3.27` is now a direct requirement, replacing `symfony/twig-bundle`. `ext-curl`, `vlucas/phpdotenv` and `symfony/mailer` are no longer required; applications that relied on them being installed through this package must require them directly. `ext-openssl` is now required.
 
 ### Added
@@ -32,4 +32,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [5.0.1] - 2025-08-10
 
-Published release. The changes in this release are not itemized in this changelog; see the Git history and the [GitHub release](https://github.com/Maatify/Mailer/releases/tag/5.0.1).
+Published release. The changes in this release are not itemized in this changelog; see the Git history and the [GitHub release][5.0.1].
+
+[5.0.1]: https://github.com/Maatify/Mailer/releases/tag/5.0.1

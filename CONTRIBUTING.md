@@ -58,7 +58,7 @@ actionlint .github/workflows/*.yml
 
 ## Tests
 
-- Every bug fix needs a regression test that fails without the fix (`tests/Regression`).
+- Every bug fix needs a regression test that fails without the fix, in the suite that fits it: `tests/Regression` for guards and unit-level behavior, `tests/System` when the defect shows through the public API and the SMTP traffic.
 - New observable behavior needs a system-level test through the public API (`tests/System`).
 - Tests never send real mail. They use the local SMTP stand-in in `tests/Support` (implicit TLS, a per-run self-signed certificate); every send runs in its own PHP process. Tests that check logging must assert that a log entry was actually written, and use canary values to prove nothing sensitive is logged.
 - This library has no database or other repository-controlled service that CI could provision, so there are no Integration suites. The SMTP server is externally controlled in production; it is verified deterministically with the local stand-in, and any live check against a real server is a separate, controlled verification that is never part of baseline CI.

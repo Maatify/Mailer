@@ -5,14 +5,14 @@
 
 ## Supported Versions
 
-The actively supported release line is `6.x`.
+This policy covers the `6.x` line, prepared as release `6.0.0`. `6.x` becomes the actively supported release line once `6.0.0` is published and available to consumers; security fixes are then provided in the latest stable release within `6.x`. Users should upgrade to the latest available `6.x` version before reporting a vulnerability.
 
-Security fixes are provided in the latest stable release within the supported `6.x` line. Users should upgrade to the latest available `6.x` version before reporting a vulnerability.
+As of release qualification, the latest published release is `5.0.1` and `6.0.0` is not yet published. Whether the `5.x` line receives security maintenance is decided by an explicit support policy, which is recorded here when it is set; until then this file makes no statement about `5.x`.
 
-| Version     | Supported |
-|-------------|-----------|
-| `6.x`       | Yes       |
-| Older lines | No        |
+| Version | Supported                                           |
+|---------|-----------------------------------------------------|
+| `6.x`   | Actively supported from the publication of `6.0.0`  |
+| `5.x`   | Not specified by this policy yet                    |
 
 ## Reporting a Vulnerability
 
