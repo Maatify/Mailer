@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `MAILER_PACKAGE_REFERENCE.md`, the canonical reference for the public API, configuration, templates, result and failure guarantees, logging and extension point; a regression test keeps it in step with the code.
 - `Maatify\Mailer\Contract\SubjectProviderInterface` and the `Maatify\Mailer\Enum\MailSubjectEnum` enum (with the library's default subject for each message): the explicit way for an application to choose subject lines.
 - Support metadata in `composer.json` (`support.issues`, `support.source`, `support.security`), `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 - PHPStan at level `max` with no baseline and no suppressions, regression and system test suites, a logger compatibility check against `maatify/logger` 5.0.1, 5.1.x and 7.0, and a Consumer Verification Harness that installs the package from the committed tree into a clean Composer consumer and sends mail through a local SMTP stand-in.
