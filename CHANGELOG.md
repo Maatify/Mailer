@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Upgrading from 5.x
 
 1. Run the application on PHP 8.4.27 or newer in 8.4, or 8.5.12 or newer in 8.5, as declared by `require.php`.
-2. Change the version constraint of the library in your project to `^6.0` and update it with its dependencies:
+2. Once `6.0.0` is published and available through Composer, change the version constraint of the library in your project to `^6.0` and update it with its dependencies:
 
    ```bash
    composer require 'maatify/mailer:^6.0' --with-all-dependencies
