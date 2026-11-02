@@ -4,10 +4,13 @@
 // of each call as JSON. Templates come from tests/Fixtures/templates. `after-failure` removes the
 // message_admin templates (the first message of AdminMessage() fails), `after-ack-failure` removes
 // the message templates (the acknowledgement fails, so the follow-up is a confirm code),
-// `after-exception` runs AdminMessage() with a missing setting.
-// Usage: php reuse_runner.php <smtp-port> <after-success|after-failure|after-ack-failure|after-exception|reinitiate>
+// `after-exception` runs AdminMessage() with a missing setting (before any state changes),
+// `throw-first` and `throw-ack` make the first or the second SMTP send throw an Error after the
+// recipient and Reply-To were already changed.
+// Usage: php reuse_runner.php <smtp-port> <after-success|after-failure|after-ack-failure|after-exception|throw-first|throw-ack|reinitiate>
 
 use Maatify\Mailer\Service\Mailer;
+use Maatify\Mailer\Tests\Support\ThrowingMailer;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -17,7 +20,7 @@ if (!is_array($arguments) || count($arguments) !== 3) {
     exit(2);
 }
 [$script, $port, $scenario] = array_map(static fn (mixed $value): string => is_scalar($value) ? (string)$value : '', $arguments);
-if (!in_array($scenario, ['after-success', 'after-failure', 'after-ack-failure', 'after-exception', 'reinitiate'], true)) {
+if (!in_array($scenario, ['after-success', 'after-failure', 'after-ack-failure', 'after-exception', 'throw-first', 'throw-ack', 'reinitiate'], true)) {
     fwrite(STDERR, "Unknown scenario\n");
     exit(2);
 }
@@ -41,7 +44,10 @@ if (isset($removed[$scenario])) {
     $templates = $copy;
 }
 
-$mailer = new Mailer('visitor@example.test', 'Visitor Name', '', $templates);
+$throwOn = ['throw-first' => 1, 'throw-ack' => 2][$scenario] ?? 0;
+$mailer = $throwOn > 0
+    ? new ThrowingMailer($throwOn, 'visitor@example.test', 'Visitor Name', $templates)
+    : new Mailer('visitor@example.test', 'Visitor Name', '', $templates);
 if ($scenario === 'after-exception') {
     $name = $_ENV['SMTP_FROM_NAME'];
     unset($_ENV['SMTP_FROM_NAME']);
@@ -52,6 +58,13 @@ if ($scenario === 'after-exception') {
         $results = ['admin' => 'exception'];
     }
     $_ENV['SMTP_FROM_NAME'] = $name;
+} elseif ($throwOn > 0) {
+    try {
+        $mailer->AdminMessage('REUSE-BODY', 'REUSE-SUBJECT');
+        $results = ['admin' => 'no-error'];
+    } catch (Error) {
+        $results = ['admin' => 'error'];
+    }
 } else {
     $results = ['admin' => $mailer->AdminMessage('REUSE-BODY', 'REUSE-SUBJECT')];
 }

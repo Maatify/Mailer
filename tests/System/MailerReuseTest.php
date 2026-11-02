@@ -57,13 +57,32 @@ final class MailerReuseTest extends TestCase
         $this->assertFollowUpIsPlain($messages[1], 'Visitor Name <visitor@example.test>');
     }
 
-    public function testAfterAnExceptionTheObjectIsUnchanged(): void
+    public function testAMissingSettingIsReportedBeforeAnyStateChanges(): void
     {
         $this->assertSame(['admin' => 'exception', 'follow_up' => true], $this->scenario('after-exception'));
 
         $messages = $this->messages();
         $this->assertCount(1, $messages, 'The failed AdminMessage() sent nothing; only the follow-up reached the server.');
         $this->assertFollowUpIsPlain($messages[0], 'Visitor Name <visitor@example.test>');
+    }
+
+    public function testWhenTheFirstSendThrowsAfterTheStateChangedTheRecipientAndReplyToAreRestored(): void
+    {
+        $this->assertSame(['admin' => 'error', 'follow_up' => true], $this->scenario('throw-first'));
+
+        $messages = $this->messages();
+        $this->assertCount(1, $messages, 'The throwing send reached no server; only the follow-up did.');
+        $this->assertFollowUpIsPlain($messages[0], 'Visitor Name <visitor@example.test>');
+    }
+
+    public function testWhenTheAcknowledgementSendThrowsTheRecipientAndReplyToAreRestored(): void
+    {
+        $this->assertSame(['admin' => 'error', 'follow_up' => true], $this->scenario('throw-ack'));
+
+        $messages = $this->messages();
+        $this->assertCount(2, $messages, 'The site message and the follow-up reached the server; the throwing acknowledgement did not.');
+        $this->assertMatchesRegularExpression('/^To: Site Office <office@example\.test>\r?$/m', $messages[0]);
+        $this->assertFollowUpIsPlain($messages[1], 'Visitor Name <visitor@example.test>');
     }
 
     public function testReInitiateSenderReplacesTheRecipientAndClearsTheReplyTo(): void
