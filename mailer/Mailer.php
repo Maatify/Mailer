@@ -140,8 +140,8 @@ class Mailer extends MailerSender
             $this->subject = 'RE: ' . $subject;
             $this->receiver_email = $this->reply_email;
             $this->receiver_name = $this->reply_name;
-            $this->reply_name = self::env('SMTP_FROM_MAIL');
-            $this->reply_email = self::env('SMTP_FROM_NAME');
+            $this->reply_name = self::env('SMTP_FROM_NAME');
+            $this->reply_email = self::env('SMTP_FROM_MAIL');
             $this->twig_name = 'message';
             return $this->Sender();
         }else{

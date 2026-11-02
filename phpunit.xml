@@ -7,7 +7,10 @@
          failOnRisky="true">
     <testsuites>
         <testsuite name="regression">
-            <directory>tests</directory>
+            <directory>tests/Regression</directory>
+        </testsuite>
+        <testsuite name="system">
+            <directory>tests/System</directory>
         </testsuite>
     </testsuites>
 </phpunit>

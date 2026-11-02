@@ -1,6 +1,6 @@
 <?php
 
-namespace Maatify\Mailer\Tests;
+namespace Maatify\Mailer\Tests\Regression;
 
 use PHPUnit\Framework\TestCase;
 
@@ -86,7 +86,7 @@ final class WhitespaceScriptTest extends TestCase
             'cd %s && CI_DIFF_BASE=%s bash %s >/dev/null 2>&1',
             escapeshellarg($this->repo),
             escapeshellarg($base),
-            escapeshellarg(__DIR__ . '/../scripts/ci/check-whitespace.sh')
+            escapeshellarg(__DIR__ . '/../../scripts/ci/check-whitespace.sh')
         ), $output, $code);
 
         return $code;

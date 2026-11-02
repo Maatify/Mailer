@@ -1,6 +1,6 @@
 <?php
 
-namespace Maatify\Mailer\Tests;
+namespace Maatify\Mailer\Tests\Regression;
 
 use Maatify\Logger\Logger;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ final class LoggerLevelTest extends TestCase
     public function testNoRecordLogCallPassesAPositionalSecondArgumentOrALiteralNonPsr3Level(): void
     {
         $calls = 0;
-        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+        foreach (glob(__DIR__ . '/../../mailer/*.php') ?: [] as $file) {
             $found = 0;
             $this->assertSame([], self::violations((string)file_get_contents($file), $found), basename($file));
             $calls += $found;

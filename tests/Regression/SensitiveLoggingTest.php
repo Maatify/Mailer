@@ -1,6 +1,6 @@
 <?php
 
-namespace Maatify\Mailer\Tests;
+namespace Maatify\Mailer\Tests\Regression;
 
 use Maatify\Mailer\Mailer;
 use Maatify\Mailer\Tests\Support\CapturesLogs;
@@ -51,7 +51,7 @@ final class SensitiveLoggingTest extends TestCase
     public function testNoLogCallPassesExceptionTextOrMessageData(): void
     {
         $calls = 0;
-        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+        foreach (glob(__DIR__ . '/../../mailer/*.php') ?: [] as $file) {
             $code = (string)preg_replace('~//[^\n]*|/\*.*?\*/~s', '', (string)file_get_contents($file));
             preg_match_all('/Logger::RecordLog\((.*?)\);/s', $code, $matches);
             foreach ($matches[1] as $arguments) {
@@ -67,7 +67,7 @@ final class SensitiveLoggingTest extends TestCase
 
     public function testTheHttpRelayTransportIsGone(): void
     {
-        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+        foreach (glob(__DIR__ . '/../../mailer/*.php') ?: [] as $file) {
             $source = (string)file_get_contents($file);
             $this->assertStringNotContainsString('StgMail', $source, basename($file));
             $this->assertStringNotContainsString('curl_', $source, basename($file));
