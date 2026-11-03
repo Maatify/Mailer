@@ -5,12 +5,11 @@
  * @Project   Mailer
  * @see https://www.maatify.dev Visit Maatify.dev
  * @link https://github.com/Maatify/Mailer View project on GitHub
- * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer),
- * @link https://github.com/symfony/mailer/ (symfony/mailer),
+ * @link  https://github.com/PHPMailer/PHPMailer/ (phpmailer/phpmailer)
  *
  * @author    Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
  * @copyright ©2024 Maatify.dev
- * @note    This Project extends other libraries phpmailer/phpmailer, symfony/mailer
+ * @note    This Project extends the library phpmailer/phpmailer
  *
  * This program is distributed in the hope that it will be useful - WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,11 +17,13 @@
  *
  */
 
-namespace Maatify\Mailer;
+namespace Maatify\Mailer\Service;
 
-use App\Assist\Config\MailerConfig;
 use Exception;
 use Maatify\Logger\Logger;
+use Maatify\Mailer\Adapter\MailerSender;
+use Maatify\Mailer\Contract\SubjectProviderInterface;
+use Maatify\Mailer\Enum\MailSubjectEnum;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -38,22 +39,22 @@ class Mailer extends MailerSender
 
     private static self $instance;
 
-    private string $twig_location = __DIR__ . '/../../../../templates/email';
+    private string $twig_location = __DIR__ . '/../../../../../templates/email';
     private string $language = '';
 
-    public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = ''): self
+    public static function obj(string $email = '', string $name = '', string $language = '', string $twig_location = '', ?SubjectProviderInterface $subjects = null): self
     {
         if(empty(self::$instance))
         {
-            self::$instance = new self($email, $name, $language, $twig_location);
+            self::$instance = new self($email, $name, $language, $twig_location, $subjects);
         }
         return self::$instance;
     }
 
-    public function __construct(string $email = '', string $name = '', string $language = '', string $twig_location = '')
+    public function __construct(string $email = '', string $name = '', string $language = '', string $twig_location = '', private readonly ?SubjectProviderInterface $subjects = null)
     {
         if(empty($email)){
-            $email = $_ENV['SMTP_REPLY_MAIL'];
+            $email = self::env('SMTP_REPLY_MAIL');
         }
         
         if(!empty($twig_location)){
@@ -77,32 +78,31 @@ class Mailer extends MailerSender
 
         $this->receiver_email = $email;
 
+        $this->reply_name = '';
+
+        $this->reply_email = '';
+
         $this->twigLoader($language);
 
         return $this;
     }
 
-    private array $data;
+    /** @var array<string, string> */
+    private array $data = [];
     private string $twig_name;
 
-    private function CheckMailerConfigMethod(string $method): bool
+    private function subjectFor(MailSubjectEnum $message): string
     {
-        return class_exists('App\Assist\Config\MailerConfig')
-               &&
-               method_exists('App\Assist\Config\MailerConfig', $method);
+        $subject = $this->subjects?->subject($message, $this->language);
+
+        return $subject !== null && $subject !== '' ? $subject : $message->defaultSubject();
     }
 
     public function ConfirmCode(string $code): bool
     {
         $this->data = ['code' => $code];
 
-        if($this->CheckMailerConfigMethod('subjectConfirmCode')){
-            $this->subject = MailerConfig::obj()->subjectConfirmCode();
-        }
-
-        if(empty($this->subject)){
-            $this->subject = 'Confirm Code';
-        }
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmCode);
 
         $this->twig_name = 'confirm';
 
@@ -111,28 +111,43 @@ class Mailer extends MailerSender
 
     public function AdminMessage(string $message, string $subject): bool
     {
-        $this->data = ['message' => $message];
+        // Read the settings before touching any state, so a missing setting leaves the object as it was.
+        $siteEmail = self::env('SMTP_FROM_MAIL');
+        $siteName = self::env('SMTP_FROM_NAME');
 
-        $this->subject = $subject;
+        $visitorEmail = $this->receiver_email;
+        $visitorName = $this->receiver_name;
+        $replyEmail = $this->reply_email;
+        $replyName = $this->reply_name;
 
-        $this->reply_name = $this->receiver_name;
-        $this->reply_email = $this->receiver_email;
-        $this->receiver_email = $_ENV['SMTP_FROM_MAIL'];
-        $this->receiver_name = $_ENV['SMTP_FROM_NAME'];
+        try {
+            $this->data = ['message' => $message];
+            $this->subject = $subject;
+            $this->reply_name = $visitorName;
+            $this->reply_email = $visitorEmail;
+            $this->receiver_email = $siteEmail;
+            $this->receiver_name = $siteName;
+            $this->twig_name = 'message_admin';
 
-        $this->twig_name = 'message_admin';
+            if (!$this->Sender()) {
+                return false;
+            }
 
-        if($this->Sender()){
             $this->data = ['message' => 'We have received your message, we will reply ASAP.' . PHP_EOL . PHP_EOL . $message];
             $this->subject = 'RE: ' . $subject;
-            $this->receiver_email = $this->reply_email;
-            $this->receiver_name = $this->reply_name;
-            $this->reply_name = $_ENV['SMTP_FROM_MAIL'];
-            $this->reply_email = $_ENV['SMTP_FROM_NAME'];
+            $this->receiver_email = $visitorEmail;
+            $this->receiver_name = $visitorName;
+            $this->reply_name = $siteName;
+            $this->reply_email = $siteEmail;
             $this->twig_name = 'message';
+
             return $this->Sender();
-        }else{
-            return false;
+        } finally {
+            // The two messages must not leak their recipient or Reply-To into later sends.
+            $this->receiver_email = $visitorEmail;
+            $this->receiver_name = $visitorName;
+            $this->reply_email = $replyEmail;
+            $this->reply_name = $replyName;
         }
     }
 
@@ -149,20 +164,20 @@ class Mailer extends MailerSender
 
     public function ConfirmUserLink(string $code): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/portal/confirm_mail.php?token=' . $code);
+        return $this->ConfirmLink(self::env('SITE_URL') . '/portal/confirm_mail.php?token=' . $code);
     }
 
     public function ConfirmCustomerLink(string $code, string $subject = '', string $url = ''): bool
     {
         if(empty($url)){
-            $url = $_ENV['SITE_URL'];
+            $url = self::env('SITE_URL');
         }
         return $this->ConfirmLink($url . '/confirm_mail.php?token=' . $code);
     }
 
     public function ConfirmDashboardLink(string $code): bool
     {
-        return $this->ConfirmLink($_ENV['SITE_URL'] . '/dashboard/confirm-mail/' . $code);
+        return $this->ConfirmLink(self::env('SITE_URL') . '/dashboard/confirm-mail/' . $code);
     }
 
     private function ConfirmLink(string $url): bool
@@ -170,13 +185,7 @@ class Mailer extends MailerSender
         $this->twig_name = 'confirm_link';
         $this->data = ['code' => $url];
 
-        if($this->CheckMailerConfigMethod('subjectConfirmMail')){
-            $this->subject = MailerConfig::obj()->subjectConfirmMail();
-        }
-
-        if(empty($this->subject)){
-            $this->subject = 'Confirm Mail';
-        }
+        $this->subject = $this->subjectFor(MailSubjectEnum::ConfirmMail);
 
         return $this->Sender();
     }
@@ -184,16 +193,10 @@ class Mailer extends MailerSender
     public function ResetPassDashboardLink(string $code): bool
     {
         $this->twig_name = 'forget_password';
-        $this->data = ['code' => $_ENV['SITE_URL'] . '/dashboard/forget-password/' . $code,
-                       'image' => $_ENV['SITE_URL'] . '/images/letter.png'];
+        $this->data = ['code' => self::env('SITE_URL') . '/dashboard/forget-password/' . $code,
+                       'image' => self::env('SITE_URL') . '/images/letter.png'];
 
-        if($this->CheckMailerConfigMethod('subjectResetPass')){
-            $this->subject = MailerConfig::obj()->subjectResetPass();
-        }
-
-        if(empty($this->subject)){
-            $this->subject = 'Reset Password';
-        }
+        $this->subject = $this->subjectFor(MailSubjectEnum::ResetPassword);
 
         return $this->Sender();
     }
@@ -202,13 +205,7 @@ class Mailer extends MailerSender
     {
         $this->data = ['code' => $password];
 
-        if($this->CheckMailerConfigMethod('subjectTempPass')){
-            $this->subject = MailerConfig::obj()->subjectTempPass();
-        }
-
-        if(empty($this->subject)){
-            $this->subject = 'Your Temporary Password';
-        }
+        $this->subject = $this->subjectFor(MailSubjectEnum::TemporaryPassword);
 
         $this->twig_name = 'temp_pass';
 
@@ -220,9 +217,9 @@ class Mailer extends MailerSender
         try {
             $this->data['name'] = $this->receiver_name;
             $this->data['email'] = $this->receiver_email;
-            $this->data['site_url'] = $_ENV['EMAIL_SITE_URL'];
-            $this->data['site_logo'] = $_ENV['EMAIL_SITE_LOGO'];
-            $this->data['site_name'] = ucwords(strtolower($_ENV['EMAIL_SITE_NAME']));
+            $this->data['site_url'] = self::env('EMAIL_SITE_URL');
+            $this->data['site_logo'] = self::env('EMAIL_SITE_LOGO');
+            $this->data['site_name'] = ucwords(strtolower(self::env('EMAIL_SITE_NAME')));
 
             $this->html = $this->twig->render('__header.html.twig', $this->data);
 
@@ -255,9 +252,6 @@ class Mailer extends MailerSender
             $this->language = $language;
 
             $twig_location_lang = $this->twig_location . '/' . $this->language;
-            if (class_exists('App\Assist\Config\MailerConfig')) {
-                MailerConfig::obj($this->language);
-            }
             $loader = new FilesystemLoader($twig_location_lang);
 
             $this->twig = new Environment($loader);

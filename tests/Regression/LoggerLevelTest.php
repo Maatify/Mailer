@@ -1,7 +1,8 @@
 <?php
 
-namespace Maatify\Mailer\Tests;
+namespace Maatify\Mailer\Tests\Regression;
 
+use Maatify\Mailer\Tests\Support\SourceFiles;
 use Maatify\Logger\Logger;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * string literal is a PSR-3 level. What it does not guarantee: a level coming
  * from a variable or other expression is not evaluated, and the scan is a
  * regular-expression check, not a full PHP parser. The call shape used by the
- * library is exercised against every supported logger release by
+ * library is exercised against selected logger releases (5.0.1, 5.1.x, 7.0) by
  * scripts/verify-logger-matrix.sh.
  */
 final class LoggerLevelTest extends TestCase
@@ -24,7 +25,7 @@ final class LoggerLevelTest extends TestCase
     public function testNoRecordLogCallPassesAPositionalSecondArgumentOrALiteralNonPsr3Level(): void
     {
         $calls = 0;
-        foreach (glob(__DIR__ . '/../mailer/*.php') ?: [] as $file) {
+        foreach (SourceFiles::all() as $file) {
             $found = 0;
             $this->assertSame([], self::violations((string)file_get_contents($file), $found), basename($file));
             $calls += $found;
@@ -49,7 +50,7 @@ final class LoggerLevelTest extends TestCase
     public function testTheLibrariesCallShapeWorksWithTheInstalledLogger(): void
     {
         Logger::RecordLog(message: new \Exception('logger compatibility check'), logFile: 'Maatify\\Mailer\\Mailer');
-        Logger::RecordLog(message: [['value' => 400], 'https://example.test', ['subject' => 'x']], logFile: 'Maatify\\Mailer\\MailerSender');
+        Logger::RecordLog(message: [['value' => 400], 'https://example.test', ['subject' => 'x']], logFile: 'Maatify\\Mailer\\Adapter\\MailerSender');
         $this->addToAssertionCount(1);
     }
 
