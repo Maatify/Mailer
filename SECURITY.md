@@ -7,14 +7,14 @@
 
 This policy covers the `6.x` line, prepared as release `6.0.0`. `6.x` becomes the actively supported release line once `6.0.0` is published and available to consumers; security fixes are then provided in the latest stable release within `6.x`. Users should upgrade to the latest available `6.x` version before reporting a vulnerability.
 
-The `5.x` line becomes a legacy line from the moment `6.0.0` is published and available to consumers: it receives no commitment to periodic security maintenance and no guaranteed fix timelines. A security backport to `5.x` may be considered only for a proven high or critical severity vulnerability, on a separate branch, with tests and an independent review, and with the maintainers' explicit approval of that specific case.
+The `5.x` line becomes a legacy line from the moment `6.0.0` is published and available to consumers: it receives no commitment to periodic security maintenance and no guaranteed fix timelines. A security backport to `5.x` may be considered only for a proven high or critical severity vulnerability, on a separate branch, with tests and an independent review, and with the Owner's explicit approval of that specific case.
 
 As of release qualification, the latest published release is `5.0.1` and `6.0.0` is not yet published; until it is, this file does not state that `5.x` is unsupported.
 
 | Version | Supported                                                                      |
 |---------|--------------------------------------------------------------------------------|
 | `6.x`   | Actively supported from the publication of `6.0.0`                             |
-| `5.x`   | Legacy from the publication of `6.0.0`: no commitment; exceptional backport only |
+| `5.x`   | Legacy from the publication of `6.0.0`: no commitment; exceptional backport only, with the Owner's approval |
 | Older   | No                                                                             |
 
 ## Reporting a Vulnerability
