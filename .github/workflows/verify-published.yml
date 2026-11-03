@@ -1,0 +1,50 @@
+name: Verify published release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Released version to verify, without a tag prefix (for example 6.0.0)'
+        required: true
+        type: string
+      sha:
+        description: 'Expected full commit SHA of the release'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-published-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Published dist (PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Verify the published distribution
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_SHA: ${{ inputs.sha }}
+        run: |
+          set -euo pipefail
+          scripts/release/verify-published.sh "${RELEASE_VERSION}" "${RELEASE_SHA}" | tee -a "${GITHUB_STEP_SUMMARY}"

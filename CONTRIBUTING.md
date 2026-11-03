@@ -50,6 +50,8 @@ The harness can also be run on its own with `harness/run.sh latest` (or `lowest`
 composer test:logger-matrix
 ```
 
+Before a release, `scripts/release/verify-artifact.sh <ref>` verifies the candidate artifact of an exact commit (archive content and links, `composer validate --strict`, the harness in both modes) and prints a record of the target, commit, tree and results. CI runs it on the checked-out commit and records the result in the job summary. A qualification run requires a supported PHP patch and refuses Composer platform overrides; `RELEASE_VERIFY_DRY_RUN=1` allows a local rehearsal whose record is labelled `DRY RUN` and never reports `PASS`. After a release is published, the `Verify published release` workflow (manual run, inputs: version and expected commit SHA) installs it from Packagist on supported PHP versions with no platform override and runs `scripts/release/verify-published.sh`, which runs in an isolated Composer environment (temporary home and cache, no inherited `COMPOSER_*` variables, Packagist as the only repository) and checks the install source Composer actually used (`installation-source` must be `dist`), the dist URL and references, the installed files and the public types (`VERIFY_PUBLISHED_DRY_RUN=1` allows a local rehearsal that never reports `PASS`).
+
 The gate checks the PHP patch floor of the interpreter it runs on, so use a PHP version within the declared constraint. `Workflow lint` is not part of `verify.sh`; run it locally with the same pinned `actionlint` version as CI (`ACTIONLINT_VERSION` in `.github/workflows/ci.yml` is the source of truth):
 
 ```bash
