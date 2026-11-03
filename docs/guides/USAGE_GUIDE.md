@@ -17,10 +17,10 @@ It builds the message, sends it through SMTP over implicit TLS, and returns `tru
 
 ### Release status and installation
 
-This guide describes `6.0.0`, the release target being prepared. As of release qualification, `6.0.0` is not yet published; Composer can install it only once it is published and available to consumers, and the live repository records the actual state after publication. The `5.x` line uses the previous namespaces and did not enable PHPMailer's SMTP mode, so the code in this guide does not work with it. After `6.0.0` is published, install it with:
+This guide describes `6.0.0`. The `5.x` line uses the previous namespaces and did not enable PHPMailer's SMTP mode, so the code in this guide does not work with it. Install the `6.x` line with:
 
 ```bash
-composer require 'maatify/mailer:6.0.0' --with-all-dependencies
+composer require 'maatify/mailer:^6.0' --with-all-dependencies
 ```
 
 Upgrading from `5.x`: the namespaces, the transport and the subject customization changed. See [CHANGELOG.md](../../CHANGELOG.md).

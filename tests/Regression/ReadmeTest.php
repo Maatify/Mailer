@@ -20,17 +20,17 @@ final class ReadmeTest extends TestCase
         $this->assertNotSame('', $this->readme);
     }
 
-    public function testTheReleaseTargetAndInstallCommandMatchTheChangelog(): void
+    public function testTheVersionBadgeMatchesTheLatestDatedChangelogRelease(): void
     {
         $changelog = (string)file_get_contents(__DIR__ . '/../../CHANGELOG.md');
-        if (preg_match('/^## \[(\d+\.\d+\.\d+)\]/m', $changelog, $match) !== 1) {
-            $this->fail('The CHANGELOG has no release target section.');
+        if (preg_match('/^## \[(\d+\.\d+\.\d+)\] - \d{4}-\d{2}-\d{2}$/m', $changelog, $match) !== 1) {
+            $this->fail('The CHANGELOG has no dated release section.');
         }
-        $target = $match[1];
-
-        $this->assertStringContainsString('Release%20Target-' . $target . '-blue', $this->readme);
-        $this->assertStringContainsString('composer require maatify/mailer:' . $target, $this->readme);
-        $this->assertStringContainsString('as of release qualification', strtolower($this->readme));
+        $this->assertStringContainsString('Version-' . $match[1] . '-blue', $this->readme);
+        $this->assertStringContainsString('Status-Stable-blue', $this->readme);
+        $this->assertStringContainsString('composer require maatify/mailer' . "\n", $this->readme);
+        $this->assertStringNotContainsString('not yet been published', strtolower($this->readme));
+        $this->assertStringNotContainsString('release target', strtolower($this->readme));
     }
 
     public function testThePhpRequirementMatchesComposerJson(): void
@@ -62,7 +62,7 @@ final class ReadmeTest extends TestCase
 
     public function testTheBadgeRowsFollowTheCanonicalOrder(): void
     {
-        $start = (int)strpos($this->readme, '[![Release Target]');
+        $start = (int)strpos($this->readme, '[![Status]');
         $rows = explode("\n\n", trim(substr($this->readme, $start, (int)strpos($this->readme, 'PHP library that renders') - $start)));
         $this->assertGreaterThanOrEqual(3, count($rows));
         $this->assertStringNotContainsString('Maatify Ecosystem', $rows[0], 'Maatify Ecosystem belongs to the second badge row.');

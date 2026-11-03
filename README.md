@@ -8,8 +8,8 @@
   <img alt="Maatify.dev" src="https://www.maatify.dev/company-profile/maatify_logo_dark.svg">
 </picture>
 
-[![Release Target](https://img.shields.io/badge/Release%20Target-6.0.0-blue)](CHANGELOG.md)
-[![Published at qualification](https://img.shields.io/badge/Published%20at%20qualification-5.0.1-lightgrey)](https://packagist.org/packages/maatify/mailer)
+[![Status](https://img.shields.io/badge/Status-Stable-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-6.0.0-blue)](https://packagist.org/packages/maatify/mailer)
 [![PHP](https://img.shields.io/badge/PHP-8.4.27%2B%20%7C%208.5.12%2B%20(%3C8.6)-8892BF)](composer.json)
 [![License](https://img.shields.io/badge/License-Proprietary-green)](LICENSE)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%20Max-brightgreen)](#quality-status)
@@ -32,10 +32,6 @@ PHP library that renders Twig e-mail templates supplied by your application and 
 
 ---
 
-## Package status
-
-This tree is the artifact for release **`6.0.0`**, which, as of this release qualification, had **not yet been published**. The version published on Packagist at the time of qualification is `5.0.1`, and it uses the previous namespaces and transport; see [Upgrade notes](#upgrade-notes). `6.0.0` is a breaking release: the namespaces, the transport, the subject customization and the PHP and dependency requirements changed.
-
 ## Key Features
 
 - Renders the Twig templates you provide (the library ships none) and sends the result as an HTML message with a plain-text alternative.
@@ -55,10 +51,10 @@ The authoritative constraints are in [`composer.json`](composer.json).
 ## Installation
 
 ```bash
-composer require maatify/mailer:6.0.0
+composer require maatify/mailer
 ```
 
-This command resolves through Packagist only once `6.0.0` is published (as of release qualification it was not yet published), so it cannot install this tree before that. With the constraint `^5.0` an existing project stays on `5.x`, so to move an existing project to `6.x` use `composer require 'maatify/mailer:^6.0' --with-all-dependencies` once it is published.
+With the constraint `^5.0` an existing project stays on `5.x`, so to move an existing project to `6.x` use `composer require 'maatify/mailer:^6.0' --with-all-dependencies`. `6.0.0` uses new namespaces and sends through SMTP only; see [Upgrade notes](#upgrade-notes).
 
 ## Quick Usage
 

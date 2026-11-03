@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.0.0]
+## [6.0.0] - 2026-11-03
 
 ### Breaking changes
 
@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Upgrading from 5.x
 
 1. Run the application on PHP 8.4.27 or newer in 8.4, or 8.5.12 or newer in 8.5, as declared by `require.php`.
-2. Once `6.0.0` is published and available through Composer, change the version constraint of the library in your project to `^6.0` and update it with its dependencies:
+2. Change the version constraint of the library in your project to `^6.0` and update it with its dependencies:
 
    ```bash
    composer require 'maatify/mailer:^6.0' --with-all-dependencies
@@ -86,4 +86,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Published release. The changes in this release are not itemized in this changelog; see the Git history and the [GitHub release][5.0.1].
 
+[6.0.0]: https://github.com/Maatify/Mailer/releases/tag/6.0.0
 [5.0.1]: https://github.com/Maatify/Mailer/releases/tag/5.0.1
