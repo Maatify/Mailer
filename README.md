@@ -13,11 +13,11 @@
 [![PHP](https://img.shields.io/badge/PHP-8.4.27%2B%20%7C%208.5.12%2B%20(%3C8.6)-8892BF)](composer.json)
 [![License](https://img.shields.io/badge/License-Proprietary-green)](LICENSE)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%20Max-brightgreen)](#quality-status)
-[![Maatify Ecosystem](https://img.shields.io/badge/Maatify-Ecosystem-blueviolet)](https://github.com/Maatify)
 
 [![Packagist](https://img.shields.io/badge/Packagist-maatify%2Fmailer-blue)](https://packagist.org/packages/maatify/mailer)
 [![Monthly Downloads](https://img.shields.io/packagist/dm/maatify/mailer)](https://packagist.org/packages/maatify/mailer/stats)
 [![Total Downloads](https://img.shields.io/packagist/dt/maatify/mailer)](https://packagist.org/packages/maatify/mailer/stats)
+[![Maatify Ecosystem](https://img.shields.io/badge/Maatify-Ecosystem-blueviolet)](https://github.com/Maatify)
 
 [![Usage Guide](https://img.shields.io/badge/Docs-Usage%20Guide-blue)](docs/guides/USAGE_GUIDE.md)
 [![Examples](https://img.shields.io/badge/Docs-Examples-blue)](examples/)
@@ -127,7 +127,7 @@ Verified in CI on PHP 8.4 and 8.5, and on the lowest supported dependencies:
 
 - PHPStan at level `max`.
 - Regression and system test suites; every send runs against a local SMTP stand-in with implicit TLS, so no real mail is sent.
-- Compatibility of the logging calls with every supported `maatify/logger` release.
+- The logging calls run against `maatify/logger` 5.0.1, 5.1.0, 5.1.2 and 7.0.0, which represent the supported `^5.0 || ^7.0` range.
 - A consumer harness that installs the package from the committed tree into a clean Composer project and sends mail through its public API.
 - Smoke execution of the examples, and an inspection of the distribution archive and its document links.
 - `composer audit` with abandoned packages treated as failures.

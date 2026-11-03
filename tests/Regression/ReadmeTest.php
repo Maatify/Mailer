@@ -60,6 +60,16 @@ final class ReadmeTest extends TestCase
         $this->assertSame(0, substr_count(substr($this->readme, 0, $upgrade), 'MailerConfig'));
     }
 
+    public function testTheBadgeRowsFollowTheCanonicalOrder(): void
+    {
+        $start = (int)strpos($this->readme, '[![Release Target]');
+        $rows = explode("\n\n", trim(substr($this->readme, $start, (int)strpos($this->readme, 'PHP library that renders') - $start)));
+        $this->assertGreaterThanOrEqual(3, count($rows));
+        $this->assertStringNotContainsString('Maatify Ecosystem', $rows[0], 'Maatify Ecosystem belongs to the second badge row.');
+        $this->assertStringContainsString('Maatify Ecosystem', $rows[1]);
+        $this->assertGreaterThan(strpos($rows[1], 'Total Downloads'), strpos($rows[1], 'Maatify Ecosystem'), 'Maatify Ecosystem follows the registry and download badges.');
+    }
+
     public function testTheHeaderStyleAndFooterFollowThePresentationRules(): void
     {
         $this->assertStringNotContainsString('for-the-badge', $this->readme);

@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * string literal is a PSR-3 level. What it does not guarantee: a level coming
  * from a variable or other expression is not evaluated, and the scan is a
  * regular-expression check, not a full PHP parser. The call shape used by the
- * library is exercised against every supported logger release by
+ * library is exercised against selected logger releases (5.0.1, 5.1.x, 7.0) by
  * scripts/verify-logger-matrix.sh.
  */
 final class LoggerLevelTest extends TestCase

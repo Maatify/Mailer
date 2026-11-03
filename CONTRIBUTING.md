@@ -44,7 +44,7 @@ scripts/ci/verify.sh latest
 scripts/ci/verify.sh lowest
 ```
 
-The harness can also be run on its own with `harness/run.sh latest` (or `lowest`); it packages the committed tree (`git archive HEAD`), so commit your changes before running it. The logger compatibility check runs the tests against each supported `maatify/logger` release:
+The harness can also be run on its own with `harness/run.sh latest` (or `lowest`); it packages the committed tree (`git archive HEAD`), so commit your changes before running it. The logger compatibility check runs the tests against selected `maatify/logger` releases (CI uses 5.0.1, 5.1.0, 5.1.2 and 7.0.0; the local script also covers 5.1.1):
 
 ```bash
 composer test:logger-matrix
