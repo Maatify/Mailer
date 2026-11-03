@@ -73,9 +73,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - The PHP sources moved from `mailer/` to `src/Service/` and `src/Adapter/`, and `composer.json` maps `Maatify\Mailer\` to `src/`. The default template directory is unchanged: `templates/email` in the project root, resolved from the installed package. The log file name that `Mailer` passes to `maatify/logger` is its class name, so it is now `Maatify\Mailer\Service\Mailer`.
 
+- `README.md` was rewritten for 6.0.0: the 5.x README showed the old namespaces and the application class `App\Assist\Config\MailerConfig`. It now states the release target and its publication state as of release qualification, the requirements, the installation command for after publication, quick usage, the Public Runtime API overview and the quality status.
+
 ### Fixed
 
-- Log calls passed the log-file name where `maatify/logger` 5.1 and newer expect the log level, which `maatify/logger` 7 rejects with `InvalidArgumentException`. They now use named arguments, so every supported `maatify/logger` release accepts them and `maatify/logger` 7 can be installed.
+- Log calls passed the log-file name where `maatify/logger` 5.1 and newer expect the log level, which `maatify/logger` 7 rejects with `InvalidArgumentException`. They now use named arguments, so the tested `maatify/logger` releases (5.0.1, 5.1.x and 7.0) accept them and `maatify/logger` 7 can be installed.
 - The acknowledgement that `AdminMessage()` sends to the visitor had its `Reply-To` name and address swapped.
 - `AdminMessage()` left the site as recipient or its `Reply-To` on the `Mailer` object, so a later send from the same object (for example through `Mailer::obj()`) could go to the wrong recipient or carry a wrong `Reply-To`. It now restores the recipient and `Reply-To` on every path, including failures and exceptions, and `reInitiateSender()` clears the `Reply-To`.
 - Failures are now logged with fixed markers and the exception class, code and line only.

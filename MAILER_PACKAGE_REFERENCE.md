@@ -165,7 +165,7 @@ Failures are written through `maatify/logger` as fixed markers and exception met
 - an exception while sending: `error = mail_send_failed`, the exception class and code;
 - an exception while rendering: the exception class, code and line, under a log file named after the `Mailer` class (`Maatify\Mailer\Service\Mailer`).
 
-The library never passes recipient addresses or names, subjects, message content, template variables, credentials or exception messages to the logger. This covers what the library passes to the logger; it does not control other operational data that the logger itself may record. The call shape is verified against every supported `maatify/logger` release.
+The library never passes recipient addresses or names, subjects, message content, template variables, credentials or exception messages to the logger. This covers what the library passes to the logger; it does not control other operational data that the logger itself may record. CI verifies the call shape against `maatify/logger` 5.0.1, 5.1.0, 5.1.2 and 7.0.0, which represent the supported range.
 
 ## Extension point
 
