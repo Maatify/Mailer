@@ -101,6 +101,20 @@ check "Composer installed it from dist (installation-source ${install_source:-un
 check "dist reference is ${expected}" "$([ "${dist_ref}" = "${expected}" ] && echo 1 || echo 0)"
 check "source reference is ${expected}" "$([ "${source_ref}" = "${expected}" ] && echo 1 || echo 0)"
 
+manifest_ok=0
+if git -C "${root}" cat-file -e "${expected}^{commit}" 2>/dev/null \
+    && git -C "${root}" show "${expected}:composer.json" | cmp -s - "vendor/${package}/composer.json"; then
+    manifest_ok=1
+fi
+check "installed composer.json equals the manifest of ${expected}" "${manifest_ok}"
+identical=0
+if "${root}/scripts/release/compare-package.sh" "vendor/${package}" "${expected}" >compare.log 2>&1; then
+    identical=1
+else
+    cat compare.log >&2
+fi
+check "installed files equal the archive of ${expected}" "${identical}"
+
 files="$(cd "vendor/${package}" && find . -type f | sed 's|^\./||' | sort)"
 required=(composer.json LICENSE README.md CHANGELOG.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md llms.txt
     MAILER_PACKAGE_REFERENCE.md docs/guides/USAGE_GUIDE.md

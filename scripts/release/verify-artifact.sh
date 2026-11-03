@@ -21,10 +21,13 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 dry_run="${RELEASE_VERIFY_DRY_RUN:-0}"
 
 if [ "${dry_run}" != "1" ]; then
-    if [ -n "${HARNESS_COMPOSER_ARGS:-}" ]; then
-        echo "Refusing to qualify a release with HARNESS_COMPOSER_ARGS set (platform overrides are not allowed)." >&2
-        exit 2
-    fi
+    # A qualification never runs with a Composer override of the platform requirements.
+    for name in HARNESS_COMPOSER_ARGS COMPOSER_IGNORE_PLATFORM_REQS COMPOSER_IGNORE_PLATFORM_REQ; do
+        if [ -n "${!name+x}" ]; then
+            echo "Refusing to qualify a release with ${name} set (platform overrides are not allowed)." >&2
+            exit 2
+        fi
+    done
     php "${root}/scripts/ci/check-php-floor.php"
 fi
 
@@ -40,6 +43,16 @@ fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "${work}"' EXIT
+if [ "${dry_run}" != "1" ]; then
+    # Isolate Composer from the host (CI_WORKFLOW_STANDARD 2.6): no inherited COMPOSER_* setting
+    # that could change dependency resolution, and a temporary home and cache.
+    while IFS= read -r name; do
+        unset "${name}"
+    done < <(compgen -e | grep '^COMPOSER_' || true)
+    export COMPOSER_HOME="${work}/composer-home"
+    export COMPOSER_CACHE_DIR="${work}/composer-cache"
+    mkdir -p "${COMPOSER_HOME}" "${COMPOSER_CACHE_DIR}"
+fi
 git clone --quiet "${root}" "${work}/repo"
 git -C "${work}/repo" checkout --quiet --detach "${commit}"
 
