@@ -128,6 +128,8 @@ Required templates, each with an `.html.twig` and a `.text.twig` variant (the te
 
 Common variables for every template: `name` and `email` (the recipient), `site_url`, `site_logo`, and `site_name` (the configured name with each word capitalized).
 
+For the `message_admin` template the recipient is the site, so `name` and `email` are the site's; the visitor's address is the message's `Reply-To`, and the template does not receive it.
+
 ## Message and transport contract
 
 - Transport: PHPMailer in SMTP mode, SMTP authentication enabled, implicit TLS (`SMTPS`) on `SMTP_PORT`. The library does not change PHPMailer's TLS verification options.

@@ -78,4 +78,15 @@ msg="$(messages)"
 expect "contact-form (message to the site)" '^To: Site Office <office@example\.test>' "${msg}"
 expect "contact-form (visitor as Reply-To)" '^Reply-To: Visitor Name <visitor@example\.test>' "${msg}"
 expect "contact-form (acknowledgement)" '^Subject: RE: Website contact form' "${msg}"
+# The site's copy must carry the visitor's text and must not attribute it to the site's own address
+# (the template's `email` variable is the recipient, which for this message is the site).
+site_copy="$(awk '/^=== MESSAGE/{n++} n==1' <<<"${msg}")"
+expect "contact-form (visitor text reaches the site)" 'Hello from the form' "${site_copy}"
+expect "contact-form (site copy says it came from the form)" 'sent this message through the contact form' "${site_copy}"
+if grep -qE '^Message from ' <<<"${site_copy}"; then
+    echo "FAIL contact-form (site copy attributes the message to the site's own address)" >&2
+    echo "${site_copy}" >&2
+    exit 1
+fi
+echo "ok   contact-form (site copy is not attributed to the site address)"
 echo "Examples smoke execution passed."
